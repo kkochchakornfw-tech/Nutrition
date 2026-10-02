@@ -1,0 +1,94 @@
+export interface SgaCriteriaOption {
+  id: number;
+  criteriaId: number;
+  labelTh: string;
+  score: number;
+  isOther: boolean;
+  sortOrder: number;
+}
+
+export interface SgaCriteria {
+  id: number;
+  criteriaKey: string;
+  labelTh: string;
+  section: string;
+  allowMultiple: boolean;
+  sortOrder: number;
+  options: SgaCriteriaOption[];
+}
+
+export type InfoSource = "patient" | "relative" | "other";
+export type SgaResult = "A" | "B" | "C";
+
+export interface AssessmentAnswerInput {
+  criteriaId: number;
+  optionId?: number; // ไม่มีเมื่อ notApplicable = true
+  notApplicable?: boolean;
+  customLabel?: string;
+  scoreOverride?: number;
+}
+
+export interface AssessmentAnswer {
+  criteriaId: number;
+  criteriaKey: string;
+  criteriaLabelTh: string;
+  optionId: number | null; // null เมื่อเป็น N/A
+  notApplicable: boolean;
+  optionLabelTh: string;
+  customLabel: string | null;
+  scoreSnapshot: number;
+}
+
+export interface CreateAssessmentInput {
+  hn: string;
+  vnAn: string | null;
+  visitNo: 1 | 2 | 3;
+  assessedAt: string; // ISO datetime
+  assessorName: string;
+  chiefComplaint: string | null;
+  dietOrder: string | null;
+  religion: string | null;
+  infoSource: InfoSource | null;
+  heightCm: number;
+  weightKg: number;
+  patientNameSnapshot: string;
+  diagnosisSnapshot: string | null;
+  allergiesSnapshot: string | null;
+  createdByUserId: number;
+  answers: AssessmentAnswerInput[];
+}
+
+export interface Assessment {
+  id: number;
+  hn: string;
+  vnAn: string | null;
+  visitNo: 1 | 2 | 3;
+  assessedAt: string;
+  assessorName: string;
+  chiefComplaint: string | null;
+  dietOrder: string | null;
+  religion: string | null;
+  infoSource: InfoSource | null;
+  heightCm: number;
+  weightKg: number;
+  bmi: number;
+  patientNameSnapshot: string;
+  diagnosisSnapshot: string | null;
+  allergiesSnapshot: string | null;
+  totalScore: number;
+  sgaResult: SgaResult;
+  createdByUserId: number;
+  createdAt: string;
+  answers: AssessmentAnswer[];
+}
+
+export interface AssessmentSummary {
+  id: number;
+  hn: string;
+  visitNo: 1 | 2 | 3;
+  assessedAt: string;
+  assessorName: string;
+  totalScore: number;
+  sgaResult: SgaResult;
+  weightKg: number;
+}

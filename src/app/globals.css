@@ -1,0 +1,470 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-kanit);
+}
+
+@font-face {
+  font-family: "Sarabun";
+  src: url("/fonts/Sarabun-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Glass drawer (frosted glass, "glossiness 0.9": เบลอบาง ยังเห็นเงาด้านหลัง) ---------- */
+.glass-drawer {
+  --drawer-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  margin: 0;
+  inset: 0 auto 0 0;
+  width: min(20rem, 86vw);
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid rgb(255 255 255 / 0.7);
+  border-radius: 0 1.25rem 1.25rem 0;
+  color: var(--color-zinc-900);
+  background: linear-gradient(
+    160deg,
+    rgb(255 255 255 / 0.55),
+    rgb(255 255 255 / 0.35)
+  );
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+  backdrop-filter: blur(6px) saturate(160%);
+  box-shadow:
+    inset -1px 0 0 rgb(255 255 255 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.8),
+    12px 0 40px rgb(15 23 42 / 0.14);
+  transform: translateX(-100%);
+  transition:
+    transform 320ms var(--drawer-ease),
+    overlay 320ms allow-discrete,
+    display 320ms allow-discrete;
+}
+
+.glass-drawer[open] {
+  transform: translateX(0);
+}
+
+@starting-style {
+  .glass-drawer[open] {
+    transform: translateX(-100%);
+  }
+}
+
+.glass-drawer::backdrop {
+  background: rgb(15 23 42 / 0);
+  transition:
+    background-color 320ms ease,
+    overlay 320ms allow-discrete,
+    display 320ms allow-discrete;
+}
+
+.glass-drawer[open]::backdrop {
+  background: rgb(15 23 42 / 0.12);
+}
+
+@starting-style {
+  .glass-drawer[open]::backdrop {
+    background: rgb(15 23 42 / 0);
+  }
+}
+
+/* ไม่มี backdrop-filter → ใช้พื้นทึบขึ้นเพื่อให้ตัวหนังสืออ่านออก */
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .glass-drawer {
+    background: rgb(255 255 255 / 0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-drawer,
+  .glass-drawer::backdrop {
+    transition: none;
+  }
+}
+
+html:has(.glass-drawer[open]) {
+  overflow: hidden;
+}
+
+/* ---------- การพิมพ์ ---------- */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    /* ให้พิมพ์สีพื้น/ภาพตามจริง ไม่ถูกเบราว์เซอร์ตัดทิ้ง */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-sheet {
+    break-inside: avoid;
+  }
+
+  /* แผ่นพาสเทลเต็มหน้า A4 (ไม่มีขอบขาวจาก @page) — ใช้ named page เฉพาะแผ่นนี้ */
+  @page pastel {
+    margin: 0;
+  }
+  .pastel-sheet {
+    page: pastel;
+    width: 210mm;
+    min-height: 297mm;
+    max-width: none;
+    padding: 12mm;
+    box-sizing: border-box;
+  }
+}
+
+/* ---------- พื้นหลังพาสเทล (หน้าพิมพ์ธงโภชนาการ) ---------- */
+.pastel-sheet {
+  background:
+    radial-gradient(circle at 12% 8%, #ffe4ef 0, transparent 38%),
+    radial-gradient(circle at 92% 18%, #ede9fe 0, transparent 40%),
+    radial-gradient(circle at 8% 78%, #dcfce7 0, transparent 42%),
+    radial-gradient(circle at 90% 92%, #fef3c7 0, transparent 40%),
+    linear-gradient(160deg, #fff7f2 0%, #fdf4ff 45%, #f0fdf8 100%);
+}
+
+/* ============================================================
+   หน้า Login — โมชันมีเรื่องราว: "จานอาหารค่อย ๆ ประกอบตัวขึ้น"
+   จังหวะ: จาน (setup) → ข้าว/ผัก/โปรตีน บินเข้าตามแนวโค้ง (action) →
+           เบอร์รี่ตกแต่งเด้งเข้าสุดท้าย (payoff) → ไอน้ำลอย + เบอร์รี่ขยิบตา (idle)
+   อ้างอิงหลักการจาก motion-design skill: arcs, anticipation, overshoot,
+   staggered choreography, ambient <20% ของแรงหลัก, 1 signature quirk (เบอร์รี่)
+   ============================================================ */
+
+/* ---------- ฉาก: จานประกอบตัว ---------- */
+@keyframes login-plate-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(10px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.02) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ข้าว: ร่วงจากด้านบน แกว่งเบา ๆ ตอนลงจอด (โค้ง + overshoot อ่อน) */
+@keyframes login-food-top {
+  0% {
+    opacity: 0;
+    transform: translate(-4px, -44px) rotate(-12deg) scale(0.78);
+  }
+  62% {
+    opacity: 1;
+    transform: translate(2px, 4px) rotate(3deg) scale(1.04);
+  }
+  82% {
+    transform: translate(-1px, -2px) rotate(-1deg) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* ผัก: ไถลเข้าจากซ้าย */
+@keyframes login-food-left {
+  0% {
+    opacity: 0;
+    transform: translate(-48px, 8px) rotate(-9deg) scale(0.8);
+  }
+  62% {
+    opacity: 1;
+    transform: translate(5px, -3px) rotate(2deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* โปรตีน/ไข่: ไถลเข้าจากขวา */
+@keyframes login-food-right {
+  0% {
+    opacity: 0;
+    transform: translate(48px, 10px) rotate(9deg) scale(0.8);
+  }
+  62% {
+    opacity: 1;
+    transform: translate(-5px, -3px) rotate(-2deg) scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* เบอร์รี่ตกแต่ง: มาทีหลังสุด เด้งเข้าเด่นกว่าเพื่อน (signature touch) */
+@keyframes login-food-berry {
+  0% {
+    opacity: 0;
+    transform: translate(20px, 30px) rotate(20deg) scale(0.45);
+  }
+  58% {
+    opacity: 1;
+    transform: translate(-4px, -5px) rotate(-7deg) scale(1.2);
+  }
+  78% {
+    transform: translate(1px, 2px) rotate(2deg) scale(0.93);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* ไอน้ำลอย (ambient) — เริ่มหลังจานประกอบเสร็จ */
+@keyframes login-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scaleX(1);
+  }
+  25% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scaleX(1.5);
+  }
+}
+
+/* จานหายใจเบา ๆ ระหว่างว่าง (ambient) */
+@keyframes login-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.006);
+  }
+}
+
+/* เบอร์รี่ขยิบตาเป็นระยะ ๆ — active แค่ ~5% ของรอบ ให้ดูมีชีวิตไม่ใช่ลูปซ้ำซาก */
+@keyframes login-wink {
+  0%,
+  90%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  94% {
+    transform: scale(1.14) rotate(-7deg);
+  }
+  97% {
+    transform: scale(0.96) rotate(2deg);
+  }
+}
+
+.login-plate-in {
+  animation: login-plate-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.login-food-top {
+  animation: login-food-top 460ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both;
+}
+.login-food-left {
+  animation: login-food-left 460ms cubic-bezier(0.16, 1, 0.3, 1) 260ms both;
+}
+.login-food-right {
+  animation: login-food-right 460ms cubic-bezier(0.16, 1, 0.3, 1) 360ms both;
+}
+.login-food-berry {
+  animation:
+    login-food-berry 480ms cubic-bezier(0.16, 1, 0.3, 1) 520ms both,
+    login-wink 6800ms ease-in-out 1900ms infinite;
+}
+.login-breathe {
+  animation: login-breathe 4200ms ease-in-out 900ms infinite;
+}
+.login-steam {
+  animation: login-steam var(--steam-dur, 2800ms) ease-in infinite;
+  animation-delay: var(--steam-delay, 1000ms);
+}
+
+/* ---------- บลอบพื้นหลัง (ambient ชั้นหลังสุด) ---------- */
+@keyframes login-blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(3%, -4%) scale(1.06);
+  }
+  66% {
+    transform: translate(-3%, 3%) scale(0.96);
+  }
+}
+.login-blob {
+  animation: login-blob 16s ease-in-out infinite;
+}
+
+/* ---------- ฝั่งฟอร์ม: ทยอยปรากฏตามลำดับ ---------- */
+@keyframes login-logo-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.82) rotate(-10deg);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.05) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+.login-logo-in {
+  animation: login-logo-in 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.login-card-in {
+  animation: login-card-in 420ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: var(--card-delay, 480ms);
+}
+
+@keyframes login-field-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.login-field-in {
+  animation: login-field-in 280ms cubic-bezier(0.2, 0, 0, 1) both;
+  animation-delay: var(--field-delay, 0s);
+}
+
+@keyframes login-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.login-fade-up {
+  animation: login-fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--fade-delay, 0s);
+}
+
+/* ---------- สถานะ error: กระตุกปฏิเสธ (ไม่เด้งเกิน — สื่อความหนักแน่น) ---------- */
+@keyframes login-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-6px);
+  }
+  40%,
+  60% {
+    transform: translateX(6px);
+  }
+}
+.login-shake {
+  animation: login-shake 380ms ease-in-out;
+}
+
+@keyframes login-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.login-banner-in {
+  animation: login-banner-in 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes login-icon-wobble {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-8deg);
+  }
+  75% {
+    transform: rotate(8deg);
+  }
+}
+.login-icon-wobble {
+  animation: login-icon-wobble 320ms ease-in-out 80ms both;
+}
+
+/* ---------- ปุ่มดูรหัสผ่าน: กระพริบตาสั้น ๆ ตอนกด ---------- */
+@keyframes login-blink {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.15);
+  }
+}
+.login-blink {
+  animation: login-blink 220ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-plate-in,
+  .login-food-top,
+  .login-food-left,
+  .login-food-right,
+  .login-food-berry,
+  .login-breathe,
+  .login-steam,
+  .login-blob,
+  .login-logo-in,
+  .login-card-in,
+  .login-field-in,
+  .login-fade-up,
+  .login-shake,
+  .login-banner-in,
+  .login-icon-wobble,
+  .login-blink {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
