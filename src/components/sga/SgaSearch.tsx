@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Field, Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
+import { SearchIcon } from "@/components/ui/icons";
 import { PatientCard } from "./PatientCard";
 import type { PatientInfo } from "@/lib/his/types";
 import type { AssessmentSummary } from "@/lib/sga/types";
@@ -119,18 +120,23 @@ export function SgaSearch() {
 
   return (
     <div className="flex flex-col gap-6">
-      <form onSubmit={handleSearch} className="flex items-end gap-3">
-        <div className="w-full max-w-sm">
+      <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="w-full flex-1">
           <Field label="ค้นหาผู้ป่วยด้วย HN หรือชื่อ" htmlFor="patient-search">
-            <Input
-              id="patient-search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="เช่น 1234567 หรือ ทดสอบ"
-            />
+            <div className="relative">
+              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
+              <Input
+                id="patient-search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="เช่น 67-12-345678"
+                autoComplete="off"
+                className="min-h-12 w-full pl-10 text-base"
+              />
+            </div>
           </Field>
         </div>
-        <Button type="submit" disabled={loading || !query.trim()}>
+        <Button type="submit" disabled={loading || !query.trim()} className="min-h-12 px-6">
           {loading ? "กำลังค้นหา..." : "ค้นหา"}
         </Button>
       </form>

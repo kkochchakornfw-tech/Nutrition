@@ -209,6 +209,14 @@ export async function listAllCalculations(): Promise<CalorieCalculation[]> {
   return rows.map((r) => toCalculation(r, { lines: [], totals: { cho: 0, pro: 0, fat: 0, kcal: 0 } }));
 }
 
+export async function listRecentCalculations(limit: number): Promise<CalorieCalculation[]> {
+  const [rows] = await pool.query<CalcRow[]>(
+    "SELECT * FROM calorie_calculations ORDER BY calculated_at DESC, id DESC LIMIT ?",
+    [limit]
+  );
+  return rows.map((r) => toCalculation(r, { lines: [], totals: { cho: 0, pro: 0, fat: 0, kcal: 0 } }));
+}
+
 export async function listCalculationsByHn(hn: string): Promise<CalorieCalculation[]> {
   const [rows] = await pool.query<CalcRow[]>(
     "SELECT * FROM calorie_calculations WHERE hn = ? ORDER BY calculated_at DESC, id DESC",

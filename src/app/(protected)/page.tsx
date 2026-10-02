@@ -16,7 +16,6 @@ import {
   DropletIcon,
   LeafIcon,
   PlusIcon,
-  SearchIcon,
 } from "@/components/ui/icons";
 
 const RESULT_RANGE: Record<SgaResult, string> = {
@@ -76,41 +75,6 @@ export default async function HomePage() {
           <p className="mt-2 text-emerald-50">
             ประเมินภาวะโภชนาการ ติดตามผล และวางแผนอาหารให้ผู้ป่วยได้ในที่เดียว
           </p>
-
-          <form
-            action="/sga"
-            method="get"
-            role="search"
-            className="mt-6 flex flex-col gap-2 sm:flex-row"
-          >
-            <label htmlFor="home-hn" className="sr-only">
-              ค้นหาผู้ป่วยด้วย HN
-            </label>
-            <div className="relative flex-1">
-              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-              <input
-                id="home-hn"
-                name="hn"
-                inputMode="numeric"
-                autoComplete="off"
-                placeholder="ค้นหาผู้ป่วยด้วย HN"
-                className="min-h-11 w-full rounded-lg border-0 bg-white py-2 pl-9 pr-3 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-lime-300"
-              />
-            </div>
-            <button
-              type="submit"
-              className="min-h-11 cursor-pointer rounded-lg bg-zinc-900/25 px-5 text-sm font-medium text-white ring-1 ring-white/40 backdrop-blur transition-colors hover:bg-zinc-900/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              ค้นหา
-            </button>
-          </form>
-          <Link
-            href="/sga/new"
-            className="mt-3 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-white underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-          >
-            <PlusIcon className="h-4 w-4" />
-            เริ่มประเมินใหม่
-          </Link>
         </div>
       </section>
 

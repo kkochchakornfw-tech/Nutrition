@@ -285,7 +285,7 @@ export function CalorieCalculator() {
                 id="calc-hn"
                 value={hn}
                 onChange={(e) => setHn(e.target.value)}
-                placeholder="เช่น 1234567"
+                placeholder="เช่น 67-12-345678"
                 inputMode="numeric"
                 autoComplete="off"
                 autoFocus={!hn}

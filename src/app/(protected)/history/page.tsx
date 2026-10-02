@@ -113,7 +113,7 @@ export default async function HistoryPage({
                 defaultValue={hn}
                 inputMode="numeric"
                 autoComplete="off"
-                placeholder="เช่น 1234567"
+                placeholder="เช่น 67-12-345678"
                 className="min-h-10 w-full rounded-md border border-zinc-300 bg-white py-2 pl-9 pr-3 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-600/25"
               />
             </span>

@@ -1,24 +1,35 @@
 import { Suspense } from "react";
 import { CalorieCalculator } from "@/components/calorie/CalorieCalculator";
+import { CalorieHeroBanner } from "@/components/calorie/CalorieHeroBanner";
+import { RecentList } from "@/components/ui/RecentList";
+import { listRecentCalculations } from "@/lib/calorie/store";
+import { formatThaiDateFromDateTime, formatTime } from "@/lib/format";
 import { CalculatorIcon } from "@/components/ui/icons";
 
-export default function Menu2Page() {
+export default async function Menu2Page() {
+  const recent = await listRecentCalculations(5);
+
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-amber-950">
-          <CalculatorIcon className="h-5 w-5" />
-        </span>
-        <div>
-          <h1 className="font-display text-2xl font-semibold text-zinc-900 sm:text-3xl">
-            คำนวณแคลอรี่/สารอาหารต่อวัน
-          </h1>
-          <p className="text-sm text-zinc-600">คำนวณพลังงานรวมและสัดส่วน CHO/PRO/FAT ต่อวันของผู้ป่วย</p>
-        </div>
-      </header>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+      <CalorieHeroBanner />
       <Suspense fallback={<p className="text-sm text-zinc-500">กำลังโหลด...</p>}>
         <CalorieCalculator />
       </Suspense>
+      <RecentList
+        heading="การคำนวณล่าสุด"
+        emptyIcon={<CalculatorIcon className="h-6 w-6" />}
+        emptyText="บันทึกผลการคำนวณแล้วจะแสดงที่นี่"
+        iconTone="bg-amber-50 text-amber-600"
+        items={recent.map((c) => ({
+          id: c.id,
+          href: `/menu2/${c.id}`,
+          badge: <CalculatorIcon className="h-4 w-4" />,
+          badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+          title: c.patientNameSnapshot,
+          subtitle: `HN ${c.hn} · ${formatThaiDateFromDateTime(c.calculatedAt)} ${formatTime(c.calculatedAt)}`,
+          trailing: `${Math.round(c.result.totalEnergy)} kcal`,
+        }))}
+      />
     </div>
   );
 }
