@@ -28,6 +28,7 @@ function drawFieldText(
   S: number,
   field: LineField,
   raw: string | null | undefined,
+  align: "left" | "center" = "left",
 ) {
   const text = raw?.replace(/\s+/g, " ").trim();
   if (!text) return;
@@ -35,11 +36,11 @@ function drawFieldText(
     ctx,
     S,
     text,
-    field.x,
+    align === "center" ? field.x + field.width / 2 : field.x,
     field.baseline - LINE_LIFT,
     field.width,
     field.size,
-    "left",
+    align,
   );
 }
 
@@ -202,20 +203,20 @@ export function drawMisForm(
   drawFieldText(ctx, S, FIELDS.allergies, patient.allergies);
 
   // หัวฟอร์ม
-  drawFieldText(ctx, S, FIELDS.date, formatThaiDateFromDateTime(assessment.assessedAt));
-  drawFieldText(ctx, S, FIELDS.time, formatTime(assessment.assessedAt));
-  drawFieldText(ctx, S, FIELDS.creatinine, assessment.serumCreatinine?.toString());
-  drawFieldText(ctx, S, FIELDS.bun, assessment.bun?.toString());
-  drawFieldText(ctx, S, FIELDS.albuminLab, assessment.serumAlbumin?.toString());
-  drawFieldText(ctx, S, FIELDS.tibcLab, assessment.serumTibc?.toString());
+  drawFieldText(ctx, S, FIELDS.date, formatThaiDateFromDateTime(assessment.assessedAt), "center");
+  drawFieldText(ctx, S, FIELDS.time, formatTime(assessment.assessedAt), "center");
+  drawFieldText(ctx, S, FIELDS.creatinine, assessment.serumCreatinine?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.bun, assessment.bun?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.albuminLab, assessment.serumAlbumin?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.tibcLab, assessment.serumTibc?.toString(), "center");
   drawFieldText(ctx, S, FIELDS.comorbidity, assessment.comorbidityText);
-  drawFieldText(ctx, S, FIELDS.height, assessment.heightCm?.toString());
-  drawFieldText(ctx, S, FIELDS.dryWeight, assessment.dryWeightKg?.toString());
-  drawFieldText(ctx, S, FIELDS.ibw, assessment.ibwKg?.toString());
-  drawFieldText(ctx, S, FIELDS.bmi, assessment.bmi?.toString());
-  drawFieldText(ctx, S, FIELDS.waist, assessment.waistCm?.toString());
-  drawFieldText(ctx, S, FIELDS.arm, assessment.armCm?.toString());
-  drawFieldText(ctx, S, FIELDS.leg, assessment.legCm?.toString());
+  drawFieldText(ctx, S, FIELDS.height, assessment.heightCm?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.dryWeight, assessment.dryWeightKg?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.ibw, assessment.ibwKg?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.bmi, assessment.bmi?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.waist, assessment.waistCm?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.arm, assessment.armCm?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.leg, assessment.legCm?.toString(), "center");
 
   drawFieldText(ctx, S, FIELDS.assessorName, assessment.assessorName);
 

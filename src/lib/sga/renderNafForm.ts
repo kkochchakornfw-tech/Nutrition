@@ -66,8 +66,11 @@ function whiteOut(ctx: Ctx, S: number, cx: number, baseline: number) {
 }
 
 // ระยะกึ่งกลาง (pt) ระหว่างบรรทัดชื่อ/นามสกุลผู้ประเมิน — เผื่อชื่อยาวเขียนไม่พอในบรรทัดเดียว
-const DIETITIAN_LINE_GAP = 6;
-const DIETITIAN_NAME_SIZE = 7.3;
+const DIETITIAN_LINE_GAP = 5;
+// ยกชื่อทั้งสองบรรทัดขึ้นให้พ้นเส้นขอบล่างของช่อง
+const DIETITIAN_LIFT = 2.5;
+const DIETITIAN_MAX_WIDTH = 38;
+const DIETITIAN_NAME_SIZE = 6.6;
 
 /** เขียนชื่อผู้ประเมินแยกชื่อ/นามสกุลเป็น 2 บรรทัดซ้อนกลางช่องเดิม — เทมเพลตเดียวกันทุกชื่อ */
 function drawAssessorName(
@@ -89,8 +92,8 @@ function drawAssessorName(
     S,
     first,
     cx,
-    baseline - 0.8 - DIETITIAN_LINE_GAP,
-    width,
+    baseline - 0.8 - DIETITIAN_LINE_GAP - DIETITIAN_LIFT,
+    DIETITIAN_MAX_WIDTH,
     DIETITIAN_NAME_SIZE,
     "center",
   );
@@ -100,8 +103,8 @@ function drawAssessorName(
       S,
       last,
       cx,
-      baseline - 0.8 + DIETITIAN_LINE_GAP,
-      width,
+      baseline - 0.8 + DIETITIAN_LINE_GAP - DIETITIAN_LIFT,
+      DIETITIAN_MAX_WIDTH,
       DIETITIAN_NAME_SIZE,
       "center",
     );
