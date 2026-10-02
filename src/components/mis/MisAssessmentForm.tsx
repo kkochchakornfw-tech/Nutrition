@@ -101,6 +101,8 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
         setAssessors(data.assessors);
         if (!initial && data.assessors[0]) setAssessorName(data.assessors[0].fullName);
       });
+    // initial คงที่ตลอดอายุของฟอร์ม — โหลดเกณฑ์ครั้งเดียวตอน mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -498,17 +500,6 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
                     />
                   </Field>
                 </div>
-              </SubGroup>
-
-              <SubGroup title="ข้อมูลทางคลินิก">
-                <Field label="Allergies" htmlFor="allergies">
-                  <Textarea
-                    id="allergies"
-                    rows={2}
-                    value={allergiesSnapshot}
-                    onChange={(e) => setAllergiesSnapshot(e.target.value)}
-                  />
-                </Field>
               </SubGroup>
             </Card>
 

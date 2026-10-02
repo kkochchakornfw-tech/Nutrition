@@ -131,6 +131,8 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
         setAssessors(data.assessors);
         if (!initial && data.assessors[0]) setAssessorName(data.assessors[0].fullName);
       });
+    // initial คงที่ตลอดอายุของฟอร์ม — โหลดเกณฑ์ครั้งเดียวตอน mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

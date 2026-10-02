@@ -139,6 +139,8 @@ export function CalorieCalculator({ initial }: { initial?: CalorieCalculation })
         setAssessors(data.assessors);
         if (!initial && data.assessors[0]) setPerformedBy(data.assessors[0].fullName);
       });
+    // initial คงที่ตลอดอายุของฟอร์ม — โหลดรายชื่อครั้งเดียวตอน mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   async function handleLookup(hnValue?: string) {
     const target = (hnValue ?? hn).trim();
