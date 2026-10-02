@@ -17,7 +17,7 @@ import { PatientCard } from "@/components/sga/PatientCard";
 import { MisCriteriaSection } from "./MisCriteriaSection";
 import type { Assessor } from "@/lib/sga/assessors";
 import type { PatientInfo } from "@/lib/his/types";
-import type { AssessorRole, MisCriteria } from "@/lib/mis/types";
+import type { AssessorRole, MisAssessment, MisCriteria } from "@/lib/mis/types";
 import { calcBmi } from "@/lib/sga/scoring";
 import { determineNutritionStatus, NUTRITION_STATUS_META } from "@/lib/mis/scoring";
 
@@ -29,45 +29,58 @@ function nowForInput(): string {
   )}`;
 }
 
+/** ISO → "YYYY-MM-DDTHH:mm" ตามเวลาเครื่อง สำหรับ <input type="datetime-local"> */
+function isoToInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function numToStr(n: number | null | undefined): string {
+  return n === null || n === undefined ? "" : String(n);
+}
+
 function toNumberOrNull(v: string): number | null {
   if (v.trim() === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
 
-export function MisAssessmentForm() {
+export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [hn, setHn] = useState(searchParams.get("hn") ?? "");
+  const [hn, setHn] = useState(initial?.hn ?? searchParams.get("hn") ?? "");
   const [searched, setSearched] = useState(false);
   const [patient, setPatient] = useState<PatientInfo | null>(null);
   const [patientNotFound, setPatientNotFound] = useState(false);
-  const [manualPatientName, setManualPatientName] = useState("");
+  const [manualPatientName, setManualPatientName] = useState(initial?.patientNameSnapshot ?? "");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
   const [criteria, setCriteria] = useState<MisCriteria[]>([]);
   const [assessors, setAssessors] = useState<Assessor[]>([]);
 
-  const [assessedAt, setAssessedAt] = useState(nowForInput());
-  const [assessorName, setAssessorName] = useState("");
-  const [assessorRole, setAssessorRole] = useState<AssessorRole>("dietitian");
-  const [vnAn, setVnAn] = useState("");
-  const [comorbidityText, setComorbidityText] = useState("");
-  const [serumCreatinine, setSerumCreatinine] = useState("");
-  const [bun, setBun] = useState("");
-  const [serumAlbumin, setSerumAlbumin] = useState("");
-  const [serumTibc, setSerumTibc] = useState("");
-  const [heightCm, setHeightCm] = useState("");
-  const [dryWeightKg, setDryWeightKg] = useState("");
-  const [ibwKg, setIbwKg] = useState("");
-  const [waistCm, setWaistCm] = useState("");
-  const [armCm, setArmCm] = useState("");
-  const [legCm, setLegCm] = useState("");
-  const [allergiesSnapshot, setAllergiesSnapshot] = useState("");
+  const [assessedAt, setAssessedAt] = useState(initial ? isoToInput(initial.assessedAt) : nowForInput());
+  const [assessorName, setAssessorName] = useState(initial?.assessorName ?? "");
+  const [assessorRole, setAssessorRole] = useState<AssessorRole>(initial?.assessorRole ?? "dietitian");
+  const [vnAn, setVnAn] = useState(initial?.vnAn ?? "");
+  const [comorbidityText, setComorbidityText] = useState(initial?.comorbidityText ?? "");
+  const [serumCreatinine, setSerumCreatinine] = useState(numToStr(initial?.serumCreatinine));
+  const [bun, setBun] = useState(numToStr(initial?.bun));
+  const [serumAlbumin, setSerumAlbumin] = useState(numToStr(initial?.serumAlbumin));
+  const [serumTibc, setSerumTibc] = useState(numToStr(initial?.serumTibc));
+  const [heightCm, setHeightCm] = useState(numToStr(initial?.heightCm));
+  const [dryWeightKg, setDryWeightKg] = useState(numToStr(initial?.dryWeightKg));
+  const [ibwKg, setIbwKg] = useState(numToStr(initial?.ibwKg));
+  const [waistCm, setWaistCm] = useState(numToStr(initial?.waistCm));
+  const [armCm, setArmCm] = useState(numToStr(initial?.armCm));
+  const [legCm, setLegCm] = useState(numToStr(initial?.legCm));
+  const [allergiesSnapshot, setAllergiesSnapshot] = useState(initial?.allergiesSnapshot ?? "");
 
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<number, number>>(
+    () => Object.fromEntries((initial?.answers ?? []).map((a) => [a.criteriaId, a.optionId])),
+  );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -86,12 +99,12 @@ export function MisAssessmentForm() {
       .then((data) => {
         setCriteria(data.criteria);
         setAssessors(data.assessors);
-        if (data.assessors[0]) setAssessorName(data.assessors[0].fullName);
+        if (!initial && data.assessors[0]) setAssessorName(data.assessors[0].fullName);
       });
   }, []);
 
   useEffect(() => {
-    const initialHn = searchParams.get("hn");
+    const initialHn = initial?.hn ?? searchParams.get("hn");
     if (initialHn) void handleLookup(initialHn);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -115,8 +128,11 @@ export function MisAssessmentForm() {
       if (!res.ok) throw new Error(data.error ?? "ค้นหาผู้ป่วยไม่สำเร็จ");
       if (!data.patient) throw new Error("รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง");
       setPatient(data.patient);
-      setAllergiesSnapshot(data.patient.allergiesText ?? "");
-      setVnAn(data.patient.vnAn ?? "");
+      // โหมดแก้ไข: คงค่าที่บันทึกไว้เดิม ไม่ทับด้วยข้อมูลล่าสุดจาก HIS
+      if (!initial) {
+        setAllergiesSnapshot(data.patient.allergiesText ?? "");
+        setVnAn(data.patient.vnAn ?? "");
+      }
       setSearched(true);
     } catch (err) {
       setLookupError(err instanceof Error ? err.message : "ค้นหาผู้ป่วยไม่สำเร็จ");
@@ -205,8 +221,8 @@ export function MisAssessmentForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/mis/assessments", {
-        method: "POST",
+      const res = await fetch(initial ? `/api/mis/assessments/${initial.id}` : "/api/mis/assessments", {
+        method: initial ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hn: hn.trim(),
@@ -234,6 +250,7 @@ export function MisAssessmentForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "บันทึกไม่สำเร็จ");
       router.push(`/mis/${data.assessment.id}`);
+      router.refresh();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
     } finally {
@@ -262,13 +279,16 @@ export function MisAssessmentForm() {
                 inputMode="numeric"
                 autoComplete="off"
                 autoFocus={!hn}
+                readOnly={!!initial}
               />
             </Field>
           </div>
+          {!initial && (
           <Button type="submit" variant="secondary" disabled={lookupLoading || !hn.trim()}>
             {lookupLoading ? <SpinnerIcon /> : <SearchIcon />}
             {lookupLoading ? "กำลังค้นหา..." : "ค้นหา"}
           </Button>
+          )}
         </form>
         {lookupError && (
           <p role="alert" className="mt-3 flex items-center gap-2 text-sm text-red-600">
@@ -532,7 +552,7 @@ export function MisAssessmentForm() {
                 </div>
                 <Button type="submit" disabled={submitting} className="w-full px-6 sm:w-auto">
                   {submitting && <SpinnerIcon />}
-                  {submitting ? "กำลังบันทึก..." : "บันทึกผลการประเมิน"}
+                  {submitting ? "กำลังบันทึก..." : initial ? "บันทึกการแก้ไข" : "บันทึกผลการประเมิน"}
                 </Button>
               </div>
               {submitError && (

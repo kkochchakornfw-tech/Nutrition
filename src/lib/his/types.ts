@@ -20,6 +20,6 @@ export interface PatientInfo {
  */
 export interface HISProvider {
   getPatientByHN(hn: string): Promise<PatientInfo | null>;
-  /** ค้นด้วย HN (ตรงหรือขึ้นต้นด้วย) หรือชื่อผู้ป่วย (มีคำที่พิมพ์อยู่ในชื่อ) */
+  /** ค้นด้วย HN เท่านั้น (ตรงหรือขึ้นต้นด้วย) */
   searchPatients(query: string): Promise<PatientInfo[]>;
 }

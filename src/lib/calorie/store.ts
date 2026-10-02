@@ -3,7 +3,14 @@ import { pool, ensurePatientRow, toDbDateTime, fromDbDateTime } from "@/lib/db";
 import { ValidationError } from "@/lib/errors";
 import { calcFoodPlan, calcMacros } from "./calc";
 import { getFoodExchangeItems } from "./foodsRepo";
-import type { CalorieCalculation, CreateCalorieInput, FoodLine, FoodPlan, MacroMode } from "./types";
+import type {
+  CalorieCalculation,
+  CreateCalorieInput,
+  FoodLine,
+  FoodLineInput,
+  FoodPlan,
+  MacroMode,
+} from "./types";
 
 /** เชื่อมกับ MySQL จริงผ่าน db/schema_v2.sql (calorie_calculations / _foods / food_exchange_items) */
 
@@ -115,6 +122,40 @@ async function fetchFoodPlan(calculationId: number): Promise<FoodPlan> {
   return toFoodPlan(rows);
 }
 
+async function insertFoodLines(calculationId: number, foods: FoodLineInput[]) {
+  // ใช้ fac ล่าสุดจาก DB (ที่ admin แก้ได้) ไม่ใช่ค่า default ที่ผูกมากับโค้ด
+  const foodMaster = await getFoodExchangeItems();
+  const plan = calcFoodPlan(foods, foodMaster);
+  const [itemRows] = await pool.query<FoodMasterRow[]>("SELECT id, item_key FROM food_exchange_items");
+  const idByKey = new Map(itemRows.map((r) => [r.item_key, r.id]));
+
+  const rowsToInsert = plan.lines
+    .map((l) => ({ itemId: idByKey.get(l.key), line: l }))
+    .filter((x): x is { itemId: number; line: FoodLine } => x.itemId !== undefined);
+
+  if (rowsToInsert.length > 0) {
+    await pool.query(
+      `INSERT INTO calorie_calculation_foods
+         (calculation_id, item_id, portions, fac_cho_snapshot, fac_pro_snapshot, fac_fat_snapshot, fac_kcal_snapshot,
+          cho_g, pro_g, fat_g, kcal)
+       VALUES ${rowsToInsert.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ")}`,
+      rowsToInsert.flatMap(({ itemId, line: l }) => [
+        calculationId,
+        itemId,
+        l.portions,
+        l.facCho,
+        l.facPro,
+        l.facFat,
+        l.facKcal,
+        l.cho,
+        l.pro,
+        l.fat,
+        l.kcal,
+      ])
+    );
+  }
+}
+
 export async function createCalculation(
   input: CreateCalorieInput & { performedBy: string; createdByUserId: number }
 ): Promise<CalorieCalculation> {
@@ -156,37 +197,7 @@ export async function createCalculation(
   );
   const calculationId = insertResult.insertId;
 
-  // ใช้ fac ล่าสุดจาก DB (ที่ admin แก้ได้) ไม่ใช่ค่า default ที่ผูกมากับโค้ด
-  const foodMaster = await getFoodExchangeItems();
-  const plan = calcFoodPlan(input.foods ?? [], foodMaster);
-  const [itemRows] = await pool.query<FoodMasterRow[]>("SELECT id, item_key FROM food_exchange_items");
-  const idByKey = new Map(itemRows.map((r) => [r.item_key, r.id]));
-
-  const rowsToInsert = plan.lines
-    .map((l) => ({ itemId: idByKey.get(l.key), line: l }))
-    .filter((x): x is { itemId: number; line: FoodLine } => x.itemId !== undefined);
-
-  if (rowsToInsert.length > 0) {
-    await pool.query(
-      `INSERT INTO calorie_calculation_foods
-         (calculation_id, item_id, portions, fac_cho_snapshot, fac_pro_snapshot, fac_fat_snapshot, fac_kcal_snapshot,
-          cho_g, pro_g, fat_g, kcal)
-       VALUES ${rowsToInsert.map(() => "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").join(", ")}`,
-      rowsToInsert.flatMap(({ itemId, line: l }) => [
-        calculationId,
-        itemId,
-        l.portions,
-        l.facCho,
-        l.facPro,
-        l.facFat,
-        l.facKcal,
-        l.cho,
-        l.pro,
-        l.fat,
-        l.kcal,
-      ])
-    );
-  }
+  await insertFoodLines(calculationId, input.foods ?? []);
 
   const created = await getCalculationById(calculationId);
   if (!created) throw new Error("บันทึกสำเร็จแต่อ่านข้อมูลที่บันทึกกลับไม่ได้");
@@ -223,4 +234,49 @@ export async function listCalculationsByHn(hn: string): Promise<CalorieCalculati
     [hn]
   );
   return rows.map((r) => toCalculation(r, { lines: [], totals: { cho: 0, pro: 0, fat: 0, kcal: 0 } }));
+}
+
+/** แก้ไขการคำนวณเดิม — เขียนทับทุกช่อง/รายการอาหาร คงเวลาที่คำนวณครั้งแรกและผู้สร้างเดิมไว้ */
+export async function updateCalculation(
+  id: number,
+  input: CreateCalorieInput & { performedBy: string },
+): Promise<CalorieCalculation | null> {
+  const outcome = calcMacros(input.inputs);
+  if (!outcome.ok) throw new ValidationError(outcome.error);
+  const { result } = outcome;
+
+  const [updateResult] = await pool.query<ResultSetHeader>(
+    `UPDATE calorie_calculations SET
+        patient_name_snapshot = ?, performed_by = ?, note = ?,
+        weight_kg = ?, factor_cal = ?, mode = ?, pct_cho_input = ?, pct_pro_input = ?, pct_fat_input = ?,
+        factor_protein = ?, total_energy_kcal = ?, cho_g = ?, pro_g = ?, fat_g = ?,
+        cho_pct = ?, pro_pct = ?, fat_pct = ?
+      WHERE id = ?`,
+    [
+      input.patientNameSnapshot,
+      input.performedBy,
+      input.note,
+      input.inputs.weightKg,
+      input.inputs.factorCal,
+      input.inputs.mode,
+      input.inputs.pctCho ?? null,
+      input.inputs.pctPro ?? null,
+      input.inputs.pctFat ?? null,
+      input.inputs.factorProtein ?? null,
+      result.totalEnergy,
+      result.cho.grams,
+      result.pro.grams,
+      result.fat.grams,
+      result.cho.pct,
+      result.pro.pct,
+      result.fat.pct,
+      id,
+    ],
+  );
+  if (updateResult.affectedRows === 0) return null;
+
+  await pool.query("DELETE FROM calorie_calculation_foods WHERE calculation_id = ?", [id]);
+  await insertFoodLines(id, input.foods ?? []);
+
+  return getCalculationById(id);
 }

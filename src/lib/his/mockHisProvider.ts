@@ -69,8 +69,6 @@ export class MockHISProvider implements HISProvider {
   async searchPatients(query: string): Promise<PatientInfo[]> {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return MOCK_PATIENTS.filter(
-      (p) => p.hn.startsWith(q) || p.fullName.toLowerCase().includes(q)
-    );
+    return MOCK_PATIENTS.filter((p) => p.hn.startsWith(q));
   }
 }

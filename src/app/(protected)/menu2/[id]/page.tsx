@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/Card";
 import { MacroBar, MacroTable, TotalEnergy } from "@/components/calorie/MacroBreakdown";
 import { FoodPlanTable } from "@/components/calorie/FoodPlanTable";
 import { NutritionFlag } from "@/components/calorie/NutritionFlag";
-import { ArrowRightIcon, CalculatorIcon, HistoryIcon } from "@/components/ui/icons";
+import { ArrowRightIcon, CalculatorIcon, EditIcon, HistoryIcon } from "@/components/ui/icons";
+import { AuditTrail } from "@/components/AuditTrail";
 import { getCalculationById } from "@/lib/calorie/store";
 import { formatThaiDateFromDateTime, formatTime } from "@/lib/format";
 
@@ -44,6 +45,13 @@ export default async function CalculationDetailPage({
               พิมพ์ธงโภชนาการ
             </Link>
           )}
+          <Link
+            href={`/menu2/${calc.id}/edit`}
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+          >
+            <EditIcon className="h-4 w-4" />
+            แก้ไข
+          </Link>
           <Link
             href={`/history?hn=${encodeURIComponent(calc.hn)}`}
             className="inline-flex min-h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
@@ -109,6 +117,8 @@ export default async function CalculationDetailPage({
           <NutritionFlag plan={calc.foodPlan} targetKcal={result.totalEnergy} />
         </Card>
       )}
+
+      <AuditTrail kind="calorie" recordId={calc.id} />
     </div>
   );
 }

@@ -22,7 +22,7 @@ import {
 } from "./CriteriaSection";
 import type { Assessor } from "@/lib/sga/assessors";
 import type { PatientInfo } from "@/lib/his/types";
-import type { InfoSource, SgaCriteria, SgaResult } from "@/lib/sga/types";
+import type { Assessment, InfoSource, SgaCriteria, SgaResult } from "@/lib/sga/types";
 import {
   calcBmi,
   determineSgaResult,
@@ -37,6 +37,27 @@ function nowForInput(): string {
   )}`;
 }
 
+/** ISO → "YYYY-MM-DDTHH:mm" ตามเวลาเครื่อง สำหรับ <input type="datetime-local"> */
+function isoToInput(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function answersToState(initial?: Assessment): Record<number, CriteriaAnswerState> {
+  const result: Record<number, CriteriaAnswerState> = {};
+  for (const a of initial?.answers ?? []) {
+    const state = (result[a.criteriaId] ??= emptyAnswerState());
+    if (a.notApplicable) {
+      state.notApplicable = true;
+    } else if (a.optionId !== null) {
+      state.optionIds.push(a.optionId);
+      if (a.customLabel) state.customLabels[a.optionId] = a.customLabel;
+    }
+  }
+  return result;
+}
+
 type FlatAnswer = {
   criteriaId: number;
   optionId?: number;
@@ -44,15 +65,15 @@ type FlatAnswer = {
   customLabel?: string;
 };
 
-export function AssessmentForm() {
+export function AssessmentForm({ initial }: { initial?: Assessment }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [hn, setHn] = useState(searchParams.get("hn") ?? "");
+  const [hn, setHn] = useState(initial?.hn ?? searchParams.get("hn") ?? "");
   const [searched, setSearched] = useState(false);
   const [patient, setPatient] = useState<PatientInfo | null>(null);
   const [patientNotFound, setPatientNotFound] = useState(false);
-  const [manualPatientName, setManualPatientName] = useState("");
+  const [manualPatientName, setManualPatientName] = useState(initial?.patientNameSnapshot ?? "");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
@@ -61,7 +82,7 @@ export function AssessmentForm() {
 
   // ลำดับครั้งที่ประเมินโดยรวม (1, 2, 3, 4, ...) — กระดาษจริงมี 3 คอลัมน์ต่อแผ่น
   // แผ่นที่ = ceil(visitNo / 3), ครั้งที่ในแผ่นนั้น = ((visitNo - 1) % 3) + 1
-  const [visitNo, setVisitNo] = useState(1);
+  const [visitNo, setVisitNo] = useState(initial?.visitNo ?? 1);
   const sheetNo = Math.floor((visitNo - 1) / 3) + 1;
   const positionInSheet = ((visitNo - 1) % 3) + 1;
   function setSheetNo(nextSheet: number) {
@@ -70,20 +91,20 @@ export function AssessmentForm() {
   function setPositionInSheet(nextPosition: number) {
     setVisitNo((sheetNo - 1) * 3 + nextPosition);
   }
-  const [assessedAt, setAssessedAt] = useState(nowForInput());
-  const [assessorName, setAssessorName] = useState("");
-  const [vnAn, setVnAn] = useState("");
-  const [chiefComplaint, setChiefComplaint] = useState("");
-  const [dietOrder, setDietOrder] = useState("");
-  const [religion, setReligion] = useState("");
-  const [infoSource, setInfoSource] = useState<InfoSource>("patient");
-  const [heightCm, setHeightCm] = useState("");
-  const [weightKg, setWeightKg] = useState("");
-  const [diagnosisSnapshot, setDiagnosisSnapshot] = useState("");
-  const [allergiesSnapshot, setAllergiesSnapshot] = useState("");
+  const [assessedAt, setAssessedAt] = useState(initial ? isoToInput(initial.assessedAt) : nowForInput());
+  const [assessorName, setAssessorName] = useState(initial?.assessorName ?? "");
+  const [vnAn, setVnAn] = useState(initial?.vnAn ?? "");
+  const [chiefComplaint, setChiefComplaint] = useState(initial?.chiefComplaint ?? "");
+  const [dietOrder, setDietOrder] = useState(initial?.dietOrder ?? "");
+  const [religion, setReligion] = useState(initial?.religion ?? "");
+  const [infoSource, setInfoSource] = useState<InfoSource>(initial?.infoSource ?? "patient");
+  const [heightCm, setHeightCm] = useState(initial ? String(initial.heightCm) : "");
+  const [weightKg, setWeightKg] = useState(initial ? String(initial.weightKg) : "");
+  const [diagnosisSnapshot, setDiagnosisSnapshot] = useState(initial?.diagnosisSnapshot ?? "");
+  const [allergiesSnapshot, setAllergiesSnapshot] = useState(initial?.allergiesSnapshot ?? "");
 
   const [answers, setAnswers] = useState<Record<number, CriteriaAnswerState>>(
-    {},
+    () => answersToState(initial),
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -108,12 +129,12 @@ export function AssessmentForm() {
       .then((data) => {
         setCriteria(data.criteria);
         setAssessors(data.assessors);
-        if (data.assessors[0]) setAssessorName(data.assessors[0].fullName);
+        if (!initial && data.assessors[0]) setAssessorName(data.assessors[0].fullName);
       });
   }, []);
 
   useEffect(() => {
-    const initialHn = searchParams.get("hn");
+    const initialHn = initial?.hn ?? searchParams.get("hn");
     if (initialHn) void handleLookup(initialHn);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -138,11 +159,14 @@ export function AssessmentForm() {
       if (!data.patient)
         throw new Error("รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง");
       setPatient(data.patient);
-      setDiagnosisSnapshot(data.patient.diagnosisText ?? "");
-      setAllergiesSnapshot(data.patient.foodAllergiesText ?? "");
-      setReligion(data.patient.religion ?? "");
-      setChiefComplaint(data.patient.chiefComplaint ?? "");
-      setVnAn(data.patient.vnAn ?? "");
+      // โหมดแก้ไข: คงค่าที่บันทึกไว้เดิม ไม่ทับด้วยข้อมูลล่าสุดจาก HIS
+      if (!initial) {
+        setDiagnosisSnapshot(data.patient.diagnosisText ?? "");
+        setAllergiesSnapshot(data.patient.foodAllergiesText ?? "");
+        setReligion(data.patient.religion ?? "");
+        setChiefComplaint(data.patient.chiefComplaint ?? "");
+        setVnAn(data.patient.vnAn ?? "");
+      }
       setSearched(true);
     } catch (err) {
       setLookupError(
@@ -301,8 +325,8 @@ export function AssessmentForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/sga/assessments", {
-        method: "POST",
+      const res = await fetch(initial ? `/api/sga/assessments/${initial.id}` : "/api/sga/assessments", {
+        method: initial ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hn: hn.trim(),
@@ -325,6 +349,7 @@ export function AssessmentForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "บันทึกไม่สำเร็จ");
       router.push(`/sga/${data.assessment.id}`);
+      router.refresh();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
     } finally {
@@ -360,17 +385,20 @@ export function AssessmentForm() {
                 inputMode="numeric"
                 autoComplete="off"
                 autoFocus={!hn}
+                readOnly={!!initial}
               />
             </Field>
           </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={lookupLoading || !hn.trim()}
-          >
-            {lookupLoading ? <SpinnerIcon /> : <SearchIcon />}
-            {lookupLoading ? "กำลังค้นหา..." : "ค้นหา"}
-          </Button>
+          {!initial && (
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={lookupLoading || !hn.trim()}
+            >
+              {lookupLoading ? <SpinnerIcon /> : <SearchIcon />}
+              {lookupLoading ? "กำลังค้นหา..." : "ค้นหา"}
+            </Button>
+          )}
         </form>
         {lookupError && (
           <p
@@ -723,7 +751,7 @@ export function AssessmentForm() {
                   className="w-full px-6 sm:w-auto"
                 >
                   {submitting && <SpinnerIcon />}
-                  {submitting ? "กำลังบันทึก..." : "บันทึกผลการประเมิน"}
+                  {submitting ? "กำลังบันทึก..." : initial ? "บันทึกการแก้ไข" : "บันทึกผลการประเมิน"}
                 </Button>
               </div>
               {submitError && (

@@ -122,7 +122,7 @@ export function SgaSearch() {
     <div className="flex flex-col gap-6">
       <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="w-full flex-1">
-          <Field label="ค้นหาผู้ป่วยด้วย HN หรือชื่อ" htmlFor="patient-search">
+          <Field label="ค้นหาผู้ป่วยด้วย HN" htmlFor="patient-search">
             <div className="relative">
               <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
               <Input

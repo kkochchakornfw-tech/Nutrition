@@ -167,7 +167,7 @@ export const FIELDS = {
   allergies: { x: 352, width: 140, baseline: 93.0, size: 8.5 },
 
   chiefComplaint: { x: 144, width: 181, baseline: 124.4, size: 9.5 },
-  diagnosis: { x: 372, width: 144, baseline: 124.4, size: 9.5 },
+  diagnosis: { x: 372, width: 186, baseline: 124.4, size: 9.5 },
   dietOrder: { x: 88, width: 158, baseline: 142.4, size: 9.5 },
   religion: { x: 273, width: 62, baseline: 142.4, size: 9.5 },
 

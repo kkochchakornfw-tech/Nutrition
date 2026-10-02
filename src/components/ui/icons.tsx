@@ -229,3 +229,10 @@ export const DropletIcon = (p: SVGProps<SVGSVGElement>) => (
     <path d="M12 2.5s7 7.4 7 12.1a7 7 0 1 1-14 0C5 9.9 12 2.5 12 2.5Z" />
   </Svg>
 );
+
+export const EditIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+  </Svg>
+);

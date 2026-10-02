@@ -5,6 +5,8 @@ import { getMisAssessmentById } from "@/lib/mis/store";
 import { NUTRITION_STATUS_META } from "@/lib/mis/scoring";
 import { buildMisFormData } from "@/lib/mis/misData";
 import { getHISProvider } from "@/lib/his/provider";
+import { AuditTrail } from "@/components/AuditTrail";
+import { EditIcon } from "@/components/ui/icons";
 import { ExportMisImageButton } from "@/components/mis/ExportMisImageButton";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -34,6 +36,13 @@ export default async function MisAssessmentDetailPage({
         <div className="flex items-center gap-4">
           <Link href={`/mis?hn=${assessment.hn}`} className="text-sm font-medium text-blue-600 hover:underline">
             ดูประวัติทั้งหมดของ HN นี้
+          </Link>
+          <Link
+            href={`/mis/${assessment.id}/edit`}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+          >
+            <EditIcon className="h-4 w-4" />
+            แก้ไข
           </Link>
           <ExportMisImageButton data={misData} />
         </div>
@@ -84,6 +93,8 @@ export default async function MisAssessmentDetailPage({
           ))}
         </ul>
       </Card>
+
+      <AuditTrail kind="mis" recordId={assessment.id} />
     </div>
   );
 }

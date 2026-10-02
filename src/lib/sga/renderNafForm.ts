@@ -83,7 +83,7 @@ function drawAssessorName(
   const width = VISIT_COLUMN_WIDTH;
   ctx.save();
   ctx.fillStyle = "#ffffff";
-  ctx.fillRect((cx - width / 2) * S, (baseline - 13) * S, width * S, 20 * S);
+  ctx.fillRect((cx - width / 2) * S, (baseline - 17) * S, width * S, 20 * S);
   ctx.restore();
   ctx.fillStyle = INK;
   const [first, last] = splitThaiName(fullName);
@@ -269,7 +269,13 @@ function drawVisitColumns(ctx: Ctx, S: number, visits: Assessment[]) {
     if (sgaBox) drawCheck(ctx, S, sgaBox, SGA_BOX_SIZE);
     cell(formatThaiDateFromDateTime(visit.assessedAt), SUMMARY_BASELINES.date);
     cell(formatTime(visit.assessedAt), SUMMARY_BASELINES.time);
-    drawAssessorName(ctx, S, cx, SUMMARY_BASELINES.dietitian, visit.assessorName);
+    drawAssessorName(
+      ctx,
+      S,
+      cx,
+      SUMMARY_BASELINES.dietitian,
+      visit.assessorName,
+    );
   }
 }
 

@@ -10,6 +10,7 @@ import {
   CalendarIcon,
   ClipboardIcon,
   DropletIcon,
+  EditIcon,
   HistoryIcon,
   SearchIcon,
   UserIcon,
@@ -242,9 +243,10 @@ function HistoryRow({ entry: e }: { entry: HistoryEntry }) {
   const meta = FORM_KIND_META[e.kind];
   const Icon = KIND_ICON[e.kind];
   return (
+    <div className="group relative">
     <Link
       href={e.href}
-      className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-white py-3 pl-5 pr-4 shadow-sm ring-1 ring-zinc-200 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+      className="relative flex items-center gap-3 overflow-hidden rounded-xl bg-white py-3 pl-5 pr-28 shadow-sm ring-1 ring-zinc-200 transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
     >
       <span className={`absolute inset-y-0 left-0 w-1.5 ${meta.bar}`} aria-hidden="true" />
       <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1 ${meta.chip}`}>
@@ -294,6 +296,15 @@ function HistoryRow({ entry: e }: { entry: HistoryEntry }) {
       )}
       <ArrowRightIcon className="h-4 w-4 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500" />
     </Link>
+    <Link
+      href={`${e.href}/edit`}
+      aria-label={`แก้ไข ${meta.shortLabel} ของ ${e.patientName}`}
+      className="absolute right-10 top-1/2 inline-flex h-9 -translate-y-1/2 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-zinc-600 ring-1 ring-zinc-200 transition-colors hover:bg-zinc-50 hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+    >
+      <EditIcon className="h-4 w-4" />
+      <span className="hidden sm:inline">แก้ไข</span>
+    </Link>
+    </div>
   );
 }
 

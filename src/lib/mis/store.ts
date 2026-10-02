@@ -127,9 +127,7 @@ async function fetchAnswers(
   return byId;
 }
 
-export async function createMisAssessment(
-  input: CreateMisAssessmentInput,
-): Promise<MisAssessment> {
+function prepareAnswers(input: CreateMisAssessmentInput) {
   if (input.answers.length !== 10) {
     throw new ValidationError("กรุณาตอบให้ครบทั้ง 10 หัวข้อ");
   }
@@ -149,7 +147,13 @@ export async function createMisAssessment(
   });
 
   const totalScore = answers.reduce((sum, a) => sum + a.score, 0);
-  const nutritionStatus = determineNutritionStatus(totalScore);
+  return { answers, totalScore, nutritionStatus: determineNutritionStatus(totalScore) };
+}
+
+export async function createMisAssessment(
+  input: CreateMisAssessmentInput,
+): Promise<MisAssessment> {
+  const { answers, totalScore, nutritionStatus } = prepareAnswers(input);
 
   await ensurePatientRow(input.hn, input.patientNameSnapshot);
 
@@ -237,4 +241,62 @@ export async function listAllMisAssessments(): Promise<MisAssessment[]> {
     "SELECT * FROM mis_assessments ORDER BY assessed_at DESC, id DESC",
   );
   return rows.map((r) => toAssessment(r, []));
+}
+
+/** แก้ไขการประเมินเดิม — เขียนทับทุกช่อง/คำตอบ คง created_by_user_id และ created_at เดิมไว้ */
+export async function updateMisAssessment(
+  id: number,
+  input: CreateMisAssessmentInput,
+): Promise<MisAssessment | null> {
+  const { answers, totalScore, nutritionStatus } = prepareAnswers(input);
+
+  const [dietitianRows] = await pool.query<RowDataPacket[]>(
+    "SELECT id FROM dietitians WHERE full_name = ? LIMIT 1",
+    [input.assessorName],
+  );
+  const assessorDietitianId = dietitianRows[0]?.id ?? null;
+
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE mis_assessments SET
+        vn_an = ?, assessed_at = ?, assessor_dietitian_id = ?, assessor_name_snapshot = ?, assessor_role = ?,
+        comorbidity_text = ?, serum_creatinine = ?, bun = ?, serum_albumin = ?, serum_tibc = ?,
+        height_cm = ?, dry_weight_kg = ?, ibw_kg = ?, bmi = ?, waist_cm = ?, arm_cm = ?, leg_cm = ?,
+        patient_name_snapshot = ?, allergies_snapshot = ?, total_score = ?, nutrition_status = ?
+      WHERE id = ?`,
+    [
+      input.vnAn,
+      toDbDateTime(input.assessedAt),
+      assessorDietitianId,
+      input.assessorName,
+      input.assessorRole,
+      input.comorbidityText,
+      input.serumCreatinine,
+      input.bun,
+      input.serumAlbumin,
+      input.serumTibc,
+      input.heightCm,
+      input.dryWeightKg,
+      input.ibwKg,
+      input.bmi,
+      input.waistCm,
+      input.armCm,
+      input.legCm,
+      input.patientNameSnapshot,
+      input.allergiesSnapshot,
+      totalScore,
+      nutritionStatus,
+      id,
+    ],
+  );
+  // affectedRows นับแถวที่ตรงเงื่อนไข (MySQL ตั้ง found rows) — 0 = ไม่มี id นี้
+  if (result.affectedRows === 0) return null;
+
+  await pool.query("DELETE FROM mis_assessment_answers WHERE assessment_id = ?", [id]);
+  await pool.query(
+    `INSERT INTO mis_assessment_answers (assessment_id, criteria_id, option_id, score_snapshot)
+     VALUES ${answers.map(() => "(?, ?, ?, ?)").join(", ")}`,
+    answers.flatMap((a) => [id, a.criteriaId, a.optionId, a.score]),
+  );
+
+  return getMisAssessmentById(id);
 }

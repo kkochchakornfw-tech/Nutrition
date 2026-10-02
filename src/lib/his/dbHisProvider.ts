@@ -215,26 +215,15 @@ export class DbHISProvider implements HISProvider {
     const term = query.trim();
     if (term.length < 2) return [];
 
-    // ตัวเลข / hncode
-    if (/^[0-9-]+$/.test(term)) {
-      const digits = term.replace(/[^0-9]/g, "");
-      const { rows } = await hisPool.query<PatientRow>(
-        `${BASE_SELECT}
-           AND (p.hn::text LIKE $1 OR p.hncode = $2 OR p.hn::text = $2)
-         ORDER BY p.hn
-         LIMIT ${SEARCH_LIMIT}`,
-        [`${escapeLike(digits)}%`, term],
-      );
-      return rows.map(toPatient);
-    }
-
-    // ชื่อ / นามสกุล (prefix match แบบ rehab)
+    // ค้นด้วย HN เท่านั้น (ตัวเลข/ขีด หรือ hncode)
+    if (!/^[0-9-]+$/.test(term)) return [];
+    const digits = term.replace(/[^0-9]/g, "");
     const { rows } = await hisPool.query<PatientRow>(
       `${BASE_SELECT}
-         AND (UPPER(p.firstname) LIKE $1 OR UPPER(p.lastname) LIKE $1)
-       ORDER BY p.firstname, p.lastname
+         AND (p.hn::text LIKE $1 OR p.hncode = $2 OR p.hn::text = $2)
+       ORDER BY p.hn
        LIMIT ${SEARCH_LIMIT}`,
-      [`${escapeLike(term.toUpperCase())}%`],
+      [`${escapeLike(digits)}%`, term],
     );
     return rows.map(toPatient);
   }

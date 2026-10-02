@@ -26,6 +26,7 @@ import {
   type FoodExchange,
 } from "@/lib/calorie/foods";
 import type {
+  CalorieCalculation,
   CalorieInputs,
   FoodLineInput,
   MacroMode,
@@ -57,43 +58,65 @@ function initialFoodDrafts(foods: FoodExchange[]): Record<string, FoodDraft> {
   );
 }
 
-export function CalorieCalculator() {
+/** คืนค่ารายการอาหารที่บันทึกไว้เป็น draft ของฟอร์ม (รายการ manual เก็บเป็นกรัม/kcal ตรง ๆ) */
+function draftsFromCalculation(
+  foods: FoodExchange[],
+  calc: CalorieCalculation,
+): Record<string, FoodDraft> {
+  const drafts = initialFoodDrafts(foods);
+  for (const line of calc.foodPlan.lines) {
+    drafts[line.key] = {
+      portions: String(line.portions),
+      manualCho: line.manual ? String(line.cho) : "",
+      manualPro: line.manual ? String(line.pro) : "",
+      manualFat: line.manual ? String(line.fat) : "",
+      manualKcal: line.manual ? String(line.kcal) : "",
+    };
+  }
+  return drafts;
+}
+
+const numStr = (n: number | undefined) => (n === undefined ? "" : String(n));
+
+export function CalorieCalculator({ initial }: { initial?: CalorieCalculation }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // ---------- ผู้ป่วย ----------
-  const [hn, setHn] = useState(searchParams.get("hn") ?? "");
+  const [hn, setHn] = useState(initial?.hn ?? searchParams.get("hn") ?? "");
   const [searched, setSearched] = useState(false);
   const [patient, setPatient] = useState<PatientInfo | null>(null);
   const [patientNotFound, setPatientNotFound] = useState(false);
-  const [manualPatientName, setManualPatientName] = useState("");
+  const [manualPatientName, setManualPatientName] = useState(initial?.patientNameSnapshot ?? "");
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [latestSga, setLatestSga] = useState<AssessmentSummary | null>(null);
 
   // ---------- ตาราง 1–2 ----------
-  const [weightKg, setWeightKg] = useState("");
-  const [factorCal, setFactorCal] = useState("");
-  const [mode, setMode] = useState<MacroMode>("percent");
-  const [pctCho, setPctCho] = useState("");
-  const [pctPro, setPctPro] = useState("");
-  const [pctFat, setPctFat] = useState("");
-  const [factorProtein, setFactorProtein] = useState("");
-  const [note, setNote] = useState("");
+  const [weightKg, setWeightKg] = useState(numStr(initial?.inputs.weightKg));
+  const [factorCal, setFactorCal] = useState(numStr(initial?.inputs.factorCal));
+  const [mode, setMode] = useState<MacroMode>(initial?.inputs.mode ?? "percent");
+  const [pctCho, setPctCho] = useState(numStr(initial?.inputs.pctCho));
+  const [pctPro, setPctPro] = useState(numStr(initial?.inputs.pctPro));
+  const [pctFat, setPctFat] = useState(numStr(initial?.inputs.pctFat));
+  const [factorProtein, setFactorProtein] = useState(numStr(initial?.inputs.factorProtein));
+  const [note, setNote] = useState(initial?.note ?? "");
   // เริ่มด้วยค่าคงที่ในโค้ดก่อนให้ฟอร์มใช้งานได้ทันที แล้วอัปเดตเป็นค่า fac ล่าสุดจาก DB
   // (ที่ admin แก้ได้) เมื่อโหลดเสร็จ — คีย์ของรายการอาหารคงที่เสมอจึง merge ได้ปลอดภัย
   const [foods, setFoods] = useState<FoodExchange[]>(FOOD_EXCHANGES);
   const [foodDrafts, setFoodDrafts] = useState<Record<string, FoodDraft>>(() =>
-    initialFoodDrafts(FOOD_EXCHANGES),
+    initial
+      ? draftsFromCalculation(FOOD_EXCHANGES, initial)
+      : initialFoodDrafts(FOOD_EXCHANGES),
   );
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [assessors, setAssessors] = useState<Assessor[]>([]);
-  const [performedBy, setPerformedBy] = useState("");
+  const [performedBy, setPerformedBy] = useState(initial?.performedBy ?? "");
 
   useEffect(() => {
-    const initialHn = searchParams.get("hn");
+    const initialHn = initial?.hn ?? searchParams.get("hn");
     if (initialHn) void handleLookup(initialHn);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -114,7 +137,7 @@ export function CalorieCalculator() {
       .then((res) => res.json())
       .then((data) => {
         setAssessors(data.assessors);
-        if (data.assessors[0]) setPerformedBy(data.assessors[0].fullName);
+        if (!initial && data.assessors[0]) setPerformedBy(data.assessors[0].fullName);
       });
   }, []);
   async function handleLookup(hnValue?: string) {
@@ -242,8 +265,10 @@ export function CalorieCalculator() {
     }
     setSubmitting(true);
     try {
-      const res = await fetch("/api/calorie/calculations", {
-        method: "POST",
+      const res = await fetch(
+        initial ? `/api/calorie/calculations/${initial.id}` : "/api/calorie/calculations",
+        {
+        method: initial ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           hn: hn.trim(),
@@ -253,10 +278,12 @@ export function CalorieCalculator() {
           foods: foodInputs,
           performedBy,
         }),
-      });
+      },
+      );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "บันทึกไม่สำเร็จ");
       router.push(`/menu2/${data.calculation.id}`);
+      router.refresh();
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "บันทึกไม่สำเร็จ");
       setSubmitting(false);
@@ -289,17 +316,20 @@ export function CalorieCalculator() {
                 inputMode="numeric"
                 autoComplete="off"
                 autoFocus={!hn}
+                readOnly={!!initial}
               />
             </Field>
           </div>
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={lookupLoading || !hn.trim()}
-          >
-            {lookupLoading ? <SpinnerIcon /> : <SearchIcon />}
-            {lookupLoading ? "กำลังค้นหา..." : "ค้นหา"}
-          </Button>
+          {!initial && (
+            <Button
+              type="submit"
+              variant="secondary"
+              disabled={lookupLoading || !hn.trim()}
+            >
+              {lookupLoading ? <SpinnerIcon /> : <SearchIcon />}
+              {lookupLoading ? "กำลังค้นหา..." : "ค้นหา"}
+            </Button>
+          )}
         </form>
 
         {lookupError && (
@@ -611,7 +641,7 @@ export function CalorieCalculator() {
                 className="mt-3 w-full"
               >
                 {submitting && <SpinnerIcon />}
-                {submitting ? "กำลังบันทึก..." : "บันทึกผลการคำนวณ"}
+                {submitting ? "กำลังบันทึก..." : initial ? "บันทึกการแก้ไข" : "บันทึกผลการคำนวณ"}
               </Button>
               {!hasPatient && (
                 <p className="mt-2 text-xs text-zinc-500">

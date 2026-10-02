@@ -139,9 +139,7 @@ async function fetchAnswers(
   return byId;
 }
 
-export async function createAssessment(
-  input: CreateAssessmentInput,
-): Promise<Assessment> {
+function prepareAssessment(input: CreateAssessmentInput) {
   const answers = input.answers.map((a): AnswerToSave => {
     const criteria = findCriteria(a.criteriaId);
     if (!criteria) {
@@ -184,6 +182,13 @@ export async function createAssessment(
   const totalScore = answers.reduce((sum, a) => sum + a.scoreSnapshot, 0);
   const bmi = calcBmi(input.heightCm, input.weightKg);
   const sgaResult = determineSgaResult(totalScore);
+  return { answers, totalScore, bmi, sgaResult };
+}
+
+export async function createAssessment(
+  input: CreateAssessmentInput,
+): Promise<Assessment> {
+  const { answers, totalScore, bmi, sgaResult } = prepareAssessment(input);
 
   await ensurePatientRow(input.hn, input.patientNameSnapshot);
 
@@ -312,4 +317,67 @@ export async function listAllAssessments(): Promise<Assessment[]> {
     "SELECT * FROM assessments ORDER BY assessed_at DESC, id DESC",
   );
   return rows.map((r) => toAssessment(r, []));
+}
+
+/** แก้ไขการประเมินเดิม — เขียนทับทุกช่อง/คำตอบ คง created_by_user_id และ created_at เดิมไว้ */
+export async function updateAssessment(
+  id: number,
+  input: CreateAssessmentInput,
+): Promise<Assessment | null> {
+  const { answers, totalScore, bmi, sgaResult } = prepareAssessment(input);
+
+  const [dietitianRows] = await pool.query<RowDataPacket[]>(
+    "SELECT id FROM dietitians WHERE full_name = ? LIMIT 1",
+    [input.assessorName],
+  );
+  const assessorDietitianId = dietitianRows[0]?.id ?? null;
+
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE assessments SET
+        vn_an = ?, visit_no = ?, assessed_at = ?, assessor_dietitian_id = ?, assessor_name_snapshot = ?,
+        chief_complaint = ?, diet_order = ?, religion = ?, info_source = ?,
+        height_cm = ?, weight_kg = ?, bmi = ?, patient_name_snapshot = ?, diagnosis_snapshot = ?,
+        allergies_snapshot = ?, total_score = ?, sga_result = ?
+      WHERE id = ?`,
+    [
+      input.vnAn,
+      input.visitNo,
+      toDbDateTime(input.assessedAt),
+      assessorDietitianId,
+      input.assessorName,
+      input.chiefComplaint,
+      input.dietOrder,
+      input.religion,
+      input.infoSource,
+      input.heightCm,
+      input.weightKg,
+      bmi,
+      input.patientNameSnapshot,
+      input.diagnosisSnapshot,
+      input.allergiesSnapshot,
+      totalScore,
+      sgaResult,
+      id,
+    ],
+  );
+  if (result.affectedRows === 0) return null;
+
+  await pool.query("DELETE FROM assessment_answers WHERE assessment_id = ?", [id]);
+  if (answers.length > 0) {
+    await pool.query(
+      `INSERT INTO assessment_answers
+       (assessment_id, criteria_id, option_id, not_applicable, custom_label, score_snapshot)
+     VALUES ${answers.map(() => "(?, ?, ?, ?, ?, ?)").join(", ")}`,
+      answers.flatMap((a) => [
+        id,
+        a.criteriaId,
+        a.optionId,
+        a.notApplicable ? 1 : 0,
+        a.customLabel,
+        a.scoreSnapshot,
+      ]),
+    );
+  }
+
+  return getAssessmentById(id);
 }
