@@ -86,6 +86,16 @@ export const ROLE_BOXES: Record<"dietitian" | "nurse", BoxPos> = {
   nurse: [357.12, 688.69],
 };
 
+/**
+ * ช่องติ๊กหน้า "Dry Weight" และ "น้ำหนักที่ควรจะเป็น (IBW)" ในหัวฟอร์ม
+ * (วัดจากภาพแม่แบบ — กรอบกว้างราว 9pt เริ่ม x≈72.8 / 223.0, y≈179.0; ตำแหน่งปรับให้เข้ากับ
+ * การคำนวณเส้นติ๊กของ drawCheck ที่ใช้ขนาดช่อง CHECKBOX_SIZE)
+ */
+export const WEIGHT_BOXES: Record<"dryWeight" | "ibw", BoxPos> = {
+  dryWeight: [72.3, 176.7],
+  ibw: [222.5, 176.7],
+};
+
 /** กรอบเขียนคะแนนรวม (Malnutrition Score) — กรอบสี่เหลี่ยมเล็กท้ายตารางฝั่งขวา */
 export const TOTAL_SCORE_BOX = {
   x: 452.88,

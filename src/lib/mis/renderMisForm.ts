@@ -7,6 +7,7 @@ import {
   FORM_PAGE,
   PHOTO_BOX,
   ROLE_BOXES,
+  WEIGHT_BOXES,
   TOTAL_SCORE_BOX,
   type BoxPos,
   type LineField,
@@ -140,6 +141,10 @@ function drawCheckmarks(ctx: Ctx, S: number, data: MisFormData) {
     if (!box) continue;
     drawCheck(ctx, S, box, CHECKBOX_SIZE);
   }
+
+  // ติ๊กหน้า Dry Weight / IBW เมื่อมีการกรอกค่านั้น
+  if (data.assessment.dryWeightKg != null) drawCheck(ctx, S, WEIGHT_BOXES.dryWeight, CHECKBOX_SIZE);
+  if (data.assessment.ibwKg != null) drawCheck(ctx, S, WEIGHT_BOXES.ibw, CHECKBOX_SIZE);
 
   const roleBox = ROLE_BOXES[data.assessment.assessorRole];
   if (roleBox) drawCheck(ctx, S, roleBox, CHECKBOX_SIZE);
