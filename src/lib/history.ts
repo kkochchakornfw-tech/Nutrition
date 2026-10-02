@@ -1,12 +1,14 @@
 import { listAllAssessments } from "@/lib/sga/store";
 import { listAllCalculations } from "@/lib/calorie/store";
+import { listAllMisAssessments } from "@/lib/mis/store";
 import type { MacroMode } from "@/lib/calorie/types";
 import type { SgaResult } from "@/lib/sga/types";
+import type { NutritionStatus } from "@/lib/mis/types";
 import type { RowDataPacket } from "mysql2/promise";
 import { pool } from "@/lib/db";
 
 /** ชนิดของฟอร์ม — ใช้แยกสีในหน้าประวัติ */
-export type HistoryKind = "sga" | "calorie";
+export type HistoryKind = "sga" | "calorie" | "mis";
 
 export interface HistoryEntry {
   kind: HistoryKind;
@@ -21,6 +23,7 @@ export interface HistoryEntry {
   performedBy: string;
   sga?: { totalScore: number; result: SgaResult; visitNo: number };
   calorie?: { totalEnergy: number; mode: MacroMode };
+  mis?: { totalScore: number; status: NutritionStatus };
 }
 
 export interface HistoryFilter {
@@ -72,12 +75,27 @@ async function calorieEntries(): Promise<HistoryEntry[]> {
   }));
 }
 
+async function misEntries(): Promise<HistoryEntry[]> {
+  const assessments = await listAllMisAssessments();
+  return assessments.map((a) => ({
+    kind: "mis",
+    id: `mis-${a.id}`,
+    hn: a.hn,
+    patientName: a.patientNameSnapshot,
+    at: a.assessedAt,
+    dateKey: toDateKey(a.assessedAt),
+    href: `/mis/${a.id}`,
+    performedBy: a.assessorName,
+    mis: { totalScore: a.totalScore, status: a.nutritionStatus },
+  }));
+}
+
 export async function listHistory(
   filter: HistoryFilter = {},
 ): Promise<HistoryEntry[]> {
   const hn = filter.hn?.trim();
-  const [sga, calorie] = await Promise.all([sgaEntries(), calorieEntries()]);
-  return [...sga, ...calorie]
+  const [sga, calorie, mis] = await Promise.all([sgaEntries(), calorieEntries(), misEntries()]);
+  return [...sga, ...calorie, ...mis]
     .filter((e) => !filter.kind || e.kind === filter.kind)
     .filter((e) => !filter.date || e.dateKey === filter.date)
     .filter((e) => !hn || e.hn.includes(hn))

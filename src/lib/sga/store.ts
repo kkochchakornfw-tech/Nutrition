@@ -22,7 +22,7 @@ interface AssessmentRow extends RowDataPacket {
   id: number;
   hn: string;
   vn_an: string | null;
-  visit_no: 1 | 2 | 3;
+  visit_no: number;
   assessed_at: string;
   assessor_name_snapshot: string;
   chief_complaint: string | null;
@@ -167,12 +167,9 @@ export async function createAssessment(
         `ไม่พบตัวเลือกที่เลือก (criteriaId=${a.criteriaId}, optionId=${a.optionId})`,
       );
     }
-    if (
-      option.isOther &&
-      (a.scoreOverride === undefined || !a.customLabel?.trim())
-    ) {
+    if (option.isOther && !a.customLabel?.trim()) {
       throw new ValidationError(
-        `ตัวเลือก "${option.labelTh}" ต้องระบุชื่อโรคและคะแนนเอง`,
+        `ตัวเลือก "${option.labelTh}" ต้องระบุชื่อโรค`,
       );
     }
     return {
@@ -180,7 +177,7 @@ export async function createAssessment(
       optionId: option.id,
       notApplicable: false,
       customLabel: option.isOther ? a.customLabel!.trim() : null,
-      scoreSnapshot: option.isOther ? a.scoreOverride! : option.score,
+      scoreSnapshot: option.score,
     };
   });
 

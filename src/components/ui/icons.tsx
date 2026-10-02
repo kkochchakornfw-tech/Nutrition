@@ -223,3 +223,9 @@ export const ShieldIcon = (p: SVGProps<SVGSVGElement>) => (
     <path d="m9 12 2 2 4-4" />
   </Svg>
 );
+
+export const DropletIcon = (p: SVGProps<SVGSVGElement>) => (
+  <Svg {...p}>
+    <path d="M12 2.5s7 7.4 7 12.1a7 7 0 1 1-14 0C5 9.9 12 2.5 12 2.5Z" />
+  </Svg>
+);

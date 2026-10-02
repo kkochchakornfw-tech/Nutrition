@@ -131,12 +131,14 @@ CREATE TABLE assessments (
 -- 5. ASSESSMENT_ANSWERS
 --    [v2] เพิ่ม custom_label — เก็บชื่อโรคที่พิมพ์เองเมื่อเลือก option ที่ is_other = 1
 --    score_snapshot ในกรณีนี้ = คะแนนที่ผู้ประเมินกำหนดเอง (ไม่ใช่ค่าจาก master)
+--    [v4] เพิ่ม not_applicable — เกณฑ์บางข้อ "ไม่เกี่ยวข้อง" กับผู้ป่วยรายนี้ได้ (option_id เป็น NULL ได้ตอนนี้)
 -- ----------------------------------------------------
 CREATE TABLE assessment_answers (
     id              INT PRIMARY KEY AUTO_INCREMENT,
     assessment_id   INT NOT NULL,
     criteria_id     INT NOT NULL,
-    option_id       INT NOT NULL,
+    option_id       INT NULL,            -- [v4] NULL เมื่อ not_applicable = 1
+    not_applicable  TINYINT(1) NOT NULL DEFAULT 0,  -- [v4]
     custom_label    VARCHAR(255) NULL,   -- [v2] ใช้เมื่อ option.is_other = 1 เท่านั้น
     score_snapshot  DECIMAL(4,1) NOT NULL,
     FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE,

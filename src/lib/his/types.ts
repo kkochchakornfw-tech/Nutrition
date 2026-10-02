@@ -7,7 +7,8 @@ export interface PatientInfo {
   admitDate: string | null; // ISO date (YYYY-MM-DD) วัน visit/admit
   ward: string | null;
   diagnosisText: string | null;
-  allergiesText: string | null;
+  allergiesText: string | null; // แพ้ยา — ใช้ในการ์ดข้อมูลผู้ป่วยทั่วไป
+  foodAllergiesText: string | null; // แพ้อาหาร (nt_allergy) — ใช้เฉพาะแบบประเมินโภชนาการ
   religion: string | null;
   chiefComplaint: string | null;
 }

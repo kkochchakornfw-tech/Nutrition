@@ -3,11 +3,13 @@ import type { ComponentType, SVGProps } from "react";
 import { listHistory, listPerformers, toDateKey, type HistoryEntry, type HistoryKind } from "@/lib/history";
 import { FORM_KIND_META } from "@/lib/formKinds";
 import { SGA_RESULT_META } from "@/lib/sga/scoring";
+import { NUTRITION_STATUS_META } from "@/lib/mis/scoring";
 import {
   ArrowRightIcon,
   CalculatorIcon,
   CalendarIcon,
   ClipboardIcon,
+  DropletIcon,
   HistoryIcon,
   SearchIcon,
   UserIcon,
@@ -17,6 +19,7 @@ import {
 const KIND_ICON: Record<HistoryKind, ComponentType<SVGProps<SVGSVGElement>>> = {
   sga: ClipboardIcon,
   calorie: CalculatorIcon,
+  mis: DropletIcon,
 };
 
 const TZ = "Asia/Bangkok";
@@ -29,7 +32,7 @@ function first(v: string | string[] | undefined): string | undefined {
 }
 
 function isKind(v: string | undefined): v is HistoryKind {
-  return v === "sga" || v === "calorie";
+  return v === "sga" || v === "calorie" || v === "mis";
 }
 
 /** สร้าง query string โดยคงตัวกรองอื่นไว้ */
@@ -58,7 +61,7 @@ export default async function HistoryPage({
 
   const all = await listHistory({ date: validDate, hn, performedBy: by });
   const entries = kind ? all.filter((e) => e.kind === kind) : all;
-  const kindCounts: Record<HistoryKind, number> = { sga: 0, calorie: 0 };
+  const kindCounts: Record<HistoryKind, number> = { sga: 0, calorie: 0, mis: 0 };
   for (const e of all) kindCounts[e.kind] += 1;
 
   const groups: { dateKey: string; items: HistoryEntry[] }[] = [];
@@ -278,6 +281,16 @@ function HistoryRow({ entry: e }: { entry: HistoryEntry }) {
             {e.calorie.mode === "percent" ? "ตาม %" : "ตามโปรตีน"}
           </span>
         </span>
+      )}
+      {e.mis && (
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="hidden text-sm tabular-nums text-zinc-600 sm:inline">{e.mis.totalScore} คะแนน</span>
+          <span
+            className={`rounded-full border px-2.5 py-1 text-xs font-medium ${NUTRITION_STATUS_META[e.mis.status].badgeClass}`}
+          >
+            {NUTRITION_STATUS_META[e.mis.status].label}
+          </span>
+        </div>
       )}
       <ArrowRightIcon className="h-4 w-4 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500" />
     </Link>

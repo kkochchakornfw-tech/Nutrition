@@ -1,13 +1,12 @@
 "use client";
 
-import type { SgaCriteria } from "@/lib/sga/types";
+import type { SgaCriteria, SgaCriteriaOption } from "@/lib/sga/types";
 import { Field, Input } from "@/components/ui/Field";
 import { CheckIcon } from "@/components/ui/icons";
 
 export interface CriteriaAnswerState {
   optionIds: number[];
   customLabels: Record<number, string>;
-  scoreOverrides: Record<number, number>;
   notApplicable: boolean;
 }
 
@@ -15,7 +14,6 @@ export function emptyAnswerState(): CriteriaAnswerState {
   return {
     optionIds: [],
     customLabels: {},
-    scoreOverrides: {},
     notApplicable: false,
   };
 }
@@ -27,11 +25,7 @@ export function scoreForCriteria(
   if (!state || state.notApplicable) return 0;
   return state.optionIds.reduce((sum, optionId) => {
     const option = criteria.options.find((o) => o.id === optionId);
-    if (!option) return sum;
-    const score = option.isOther
-      ? (state.scoreOverrides[optionId] ?? option.score)
-      : option.score;
-    return sum + score;
+    return option ? sum + option.score : sum;
   }, 0);
 }
 
@@ -79,18 +73,9 @@ export function CriteriaSection({
     });
   }
 
-  function setScoreOverride(optionId: number, value: number) {
-    onChange({
-      ...state,
-      scoreOverrides: { ...state.scoreOverrides, [optionId]: value },
-    });
-  }
-
   const sectionScore = scoreForCriteria(criteria, state);
   const answered = state.optionIds.length > 0 || state.notApplicable;
-  const otherOptions = criteria.options.filter(
-    (o) => o.isOther && state.optionIds.includes(o.id),
-  );
+  const isDisease = criteria.criteriaKey === "disease";
 
   return (
     <fieldset
@@ -132,33 +117,46 @@ export function CriteriaSection({
           </span>
         </span>
       </legend>
-      <div className="clear-both grid gap-2 sm:grid-cols-2">
-        {criteria.options.map((option) => {
-          const checked = state.optionIds.includes(option.id);
-          return (
-            <label
-              key={option.id}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50/50 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:text-blue-950 has-checked:ring-1 has-checked:ring-blue-600 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600"
-            >
-              <input
-                type={inputType}
-                name={`criteria-${criteria.id}`}
-                checked={checked}
-                onChange={(e) => toggleOption(option.id, e.target.checked)}
-                className="h-4 w-4 shrink-0 cursor-pointer accent-blue-600 focus:outline-none"
-              />
-              <span className="flex-1">{option.labelTh}</span>
-              {option.isOther ? (
-                <span className="shrink-0 text-xs text-zinc-500">
-                  ระบุคะแนนเอง
-                </span>
-              ) : (
+      {isDisease ? (
+        <div className="clear-both flex flex-col gap-4">
+          <DiseaseGroup
+            label="กลุ่มคะแนน 3"
+            options={criteria.options.filter((o) => o.score < 6)}
+            state={state}
+            onToggle={toggleOption}
+            onCustomLabelChange={setCustomLabel}
+          />
+          <DiseaseGroup
+            label="กลุ่มคะแนน 6"
+            options={criteria.options.filter((o) => o.score >= 6)}
+            state={state}
+            onToggle={toggleOption}
+            onCustomLabelChange={setCustomLabel}
+          />
+        </div>
+      ) : (
+        <div className="clear-both grid gap-2 sm:grid-cols-2">
+          {criteria.options.map((option) => {
+            const checked = state.optionIds.includes(option.id);
+            return (
+              <label
+                key={option.id}
+                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50/50 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:text-blue-950 has-checked:ring-1 has-checked:ring-blue-600 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600"
+              >
+                <input
+                  type={inputType}
+                  name={`criteria-${criteria.id}`}
+                  checked={checked}
+                  onChange={(e) => toggleOption(option.id, e.target.checked)}
+                  className="h-4 w-4 shrink-0 cursor-pointer accent-blue-600 focus:outline-none"
+                />
+                <span className="flex-1">{option.labelTh}</span>
                 <ScorePill score={option.score} />
-              )}
-            </label>
-          );
-        })}
-      </div>
+              </label>
+            );
+          })}
+        </div>
+      )}
       <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50/50 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:text-blue-950 has-checked:ring-1 has-checked:ring-blue-600">
         <input
           type="checkbox"
@@ -169,42 +167,78 @@ export function CriteriaSection({
         <span className="flex-1">N/A (ประเมินไม่ได้ / ไม่เกี่ยวข้อง)</span>
         <span className="shrink-0 text-xs text-zinc-500">0 คะแนน</span>
       </label>
+    </fieldset>
+  );
+}
+
+/** หมวดโรคที่เป็นอยู่ แบ่งเป็นกลุ่มคะแนน 3 / 6 ตามกระดาษจริง — ช่องกรอก "อื่นๆ" อยู่ใต้กลุ่มคะแนนของตัวเอง คะแนนคงที่ตามกลุ่ม แก้ไขเองไม่ได้ */
+function DiseaseGroup({
+  label,
+  options,
+  state,
+  onToggle,
+  onCustomLabelChange,
+}: {
+  label: string;
+  options: SgaCriteriaOption[];
+  state: CriteriaAnswerState;
+  onToggle: (optionId: number, checked: boolean) => void;
+  onCustomLabelChange: (optionId: number, value: string) => void;
+}) {
+  const otherOptions = options.filter(
+    (o) => o.isOther && state.optionIds.includes(o.id),
+  );
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+        {label}
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {options.map((option) => {
+          const checked = state.optionIds.includes(option.id);
+          return (
+            <label
+              key={option.id}
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800 transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50/50 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:text-blue-950 has-checked:ring-1 has-checked:ring-blue-600 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-blue-600"
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => onToggle(option.id, e.target.checked)}
+                className="h-4 w-4 shrink-0 cursor-pointer accent-blue-600 focus:outline-none"
+              />
+              <span className="flex-1">{option.labelTh}</span>
+              {option.isOther ? (
+                <span className="shrink-0 text-xs text-zinc-500">
+                  พิมพ์ชื่อโรค
+                </span>
+              ) : (
+                <ScorePill score={option.score} />
+              )}
+            </label>
+          );
+        })}
+      </div>
       {otherOptions.map((option) => (
         <div
           key={option.id}
-          className="mt-3 grid gap-3 rounded-lg border border-blue-200 bg-blue-50/60 p-3 sm:grid-cols-[minmax(0,1fr)_8rem]"
+          className="mt-2 flex flex-col gap-2 rounded-lg border border-blue-200 bg-blue-50/60 p-3 sm:flex-row sm:items-end sm:gap-3"
         >
-          <Field label="ชื่อโรค" htmlFor={`other-label-${option.id}`} required>
-            <Input
-              id={`other-label-${option.id}`}
-              placeholder="เช่น SLE"
-              value={state.customLabels[option.id] ?? ""}
-              onChange={(e) => setCustomLabel(option.id, e.target.value)}
-              required
-            />
-          </Field>
-          <Field
-            label="คะแนน"
-            htmlFor={`other-score-${option.id}`}
-            required
-            hint="ปรับตามความหนักเบา"
-          >
-            <Input
-              id={`other-score-${option.id}`}
-              type="number"
-              step="0.5"
-              inputMode="decimal"
-              value={state.scoreOverrides[option.id] ?? option.score}
-              onChange={(e) =>
-                setScoreOverride(option.id, Number(e.target.value))
-              }
-              aria-describedby={`other-score-${option.id}-hint`}
-              required
-            />
-          </Field>
+          <div className="flex-1">
+            <Field label="ชื่อโรค" htmlFor={`other-label-${option.id}`} required>
+              <Input
+                id={`other-label-${option.id}`}
+                placeholder="เช่น SLE"
+                value={state.customLabels[option.id] ?? ""}
+                onChange={(e) => onCustomLabelChange(option.id, e.target.value)}
+                required
+              />
+            </Field>
+          </div>
+          <ScorePill score={option.score} />
         </div>
       ))}
-    </fieldset>
+    </div>
   );
 }
 

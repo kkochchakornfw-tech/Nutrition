@@ -42,7 +42,6 @@ type FlatAnswer = {
   optionId?: number;
   notApplicable?: boolean;
   customLabel?: string;
-  scoreOverride?: number;
 };
 
 export function AssessmentForm() {
@@ -60,7 +59,17 @@ export function AssessmentForm() {
   const [criteria, setCriteria] = useState<SgaCriteria[]>([]);
   const [assessors, setAssessors] = useState<Assessor[]>([]);
 
-  const [visitNo, setVisitNo] = useState<1 | 2 | 3>(1);
+  // ลำดับครั้งที่ประเมินโดยรวม (1, 2, 3, 4, ...) — กระดาษจริงมี 3 คอลัมน์ต่อแผ่น
+  // แผ่นที่ = ceil(visitNo / 3), ครั้งที่ในแผ่นนั้น = ((visitNo - 1) % 3) + 1
+  const [visitNo, setVisitNo] = useState(1);
+  const sheetNo = Math.floor((visitNo - 1) / 3) + 1;
+  const positionInSheet = ((visitNo - 1) % 3) + 1;
+  function setSheetNo(nextSheet: number) {
+    setVisitNo((Math.max(1, nextSheet) - 1) * 3 + positionInSheet);
+  }
+  function setPositionInSheet(nextPosition: number) {
+    setVisitNo((sheetNo - 1) * 3 + nextPosition);
+  }
   const [assessedAt, setAssessedAt] = useState(nowForInput());
   const [assessorName, setAssessorName] = useState("");
   const [vnAn, setVnAn] = useState("");
@@ -130,7 +139,7 @@ export function AssessmentForm() {
         throw new Error("รูปแบบข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง");
       setPatient(data.patient);
       setDiagnosisSnapshot(data.patient.diagnosisText ?? "");
-      setAllergiesSnapshot(data.patient.allergiesText ?? "");
+      setAllergiesSnapshot(data.patient.foodAllergiesText ?? "");
       setReligion(data.patient.religion ?? "");
       setChiefComplaint(data.patient.chiefComplaint ?? "");
       setVnAn(data.patient.vnAn ?? "");
@@ -281,9 +290,6 @@ export function AssessmentForm() {
           customLabel: option.isOther
             ? state.customLabels[optionId]
             : undefined,
-          scoreOverride: option.isOther
-            ? (state.scoreOverrides[optionId] ?? option.score)
-            : undefined,
         };
       });
     });
@@ -411,12 +417,43 @@ export function AssessmentForm() {
 
               <SubGroup title="ข้อมูลการประเมิน">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <Field label="ครั้งที่" htmlFor="visit-no" required>
+                  <Field
+                    label="แผ่นที่"
+                    htmlFor="sheet-no"
+                    hint="ครบ 3 ครั้งในแผ่นนี้แล้ว กด + เพื่อขึ้นแผ่นใหม่"
+                  >
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSheetNo(sheetNo - 1)}
+                        disabled={sheetNo <= 1}
+                        className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-40"
+                        aria-label="แผ่นก่อนหน้า"
+                      >
+                        −
+                      </button>
+                      <span
+                        id="sheet-no"
+                        className="flex-1 text-center text-sm font-semibold tabular-nums text-zinc-900"
+                      >
+                        แผ่นที่ {sheetNo}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSheetNo(sheetNo + 1)}
+                        className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md border border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+                        aria-label="เริ่มแผ่นใหม่"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </Field>
+                  <Field label="ครั้งที่ (ในแผ่นนี้)" htmlFor="visit-no" required>
                     <Select
                       id="visit-no"
-                      value={visitNo}
+                      value={positionInSheet}
                       onChange={(e) =>
-                        setVisitNo(Number(e.target.value) as 1 | 2 | 3)
+                        setPositionInSheet(Number(e.target.value))
                       }
                     >
                       <option value={1}>ครั้งที่ 1</option>
@@ -600,7 +637,7 @@ export function AssessmentForm() {
                     />
                   </Field>
                   <div className="sm:col-span-2">
-                    <Field label="Allergies" htmlFor="allergies">
+                    <Field label="Food Allergy" htmlFor="allergies">
                       <Textarea
                         id="allergies"
                         rows={2}

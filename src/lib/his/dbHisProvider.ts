@@ -11,7 +11,8 @@ const BASE_SELECT = `
          g.gender_name,
                   br.description AS religion_desc,
          TRIM(p.religion::text) AS religion_code,
-         imed_get_all_drug_allergy(p.patient_id)  AS drug_allergy,
+         imed_get_all_drug_allergy(p.patient_id) AS drug_allergy,
+         fa.food_allergy_text,
          cv.vn_an, cv.visit_date, cv.ward, cv.dx_code, cv.dx_name,
          cv.chief_complaint
     FROM patient p
@@ -19,6 +20,20 @@ const BASE_SELECT = `
     LEFT JOIN base_religion br
            ON br.base_religion_id::text = TRIM(p.religion::text)
            AND TRIM(p.religion::text) <> '99'
+    -- แผนกโภชนาการใช้ "แพ้อาหาร" จาก nt_allergy (ไม่ใช่แพ้ยา) — เอาจาก nt_patient_nutrition
+    -- ชุดล่าสุดของผู้ป่วยรายนี้ (nt_patient_nutrition.patient_id -> patient.patient_id)
+    LEFT JOIN LATERAL (
+      SELECT npn.nt_patient_nutrition_id
+        FROM nt_patient_nutrition npn
+       WHERE npn.patient_id = p.patient_id
+       ORDER BY npn.nt_patient_nutrition_id DESC
+       LIMIT 1
+    ) latest_npn ON TRUE
+    LEFT JOIN LATERAL (
+      SELECT STRING_AGG(DISTINCT NULLIF(TRIM(na.note), ''), ', ') AS food_allergy_text
+        FROM nt_allergy na
+       WHERE na.nt_patient_nutrition_id = latest_npn.nt_patient_nutrition_id
+    ) fa ON TRUE
     LEFT JOIN LATERAL (
       SELECT CASE WHEN NULLIF(TRIM(v.an), '') IS NOT NULL
                   THEN format_an(v.an) ELSE format_vn(v.vn) END AS vn_an,
@@ -82,7 +97,7 @@ interface PatientRow {
   birthdate: string | Date | null;
   gender_name: string | null;
   drug_allergy: string | null;
-  other_allergy: string | null;
+  food_allergy_text: string | null;
   vn_an: string | null;
   visit_date: string | null;
   ward: string | null;
@@ -129,17 +144,15 @@ function toIsoDate(v: string | Date | null): string {
 }
 
 // allergy จาก HIS มักซ้ำหลาย visit → split + dedupe (แบบเดียวกับ rehab)
-function mergeAllergies(...sources: (string | null)[]): string | null {
+function dedupeList(src: string | null): string | null {
+  if (!src) return null;
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const src of sources) {
-    if (!src) continue;
-    for (const raw of src.split(/[,;]/)) {
-      const name = raw.trim();
-      if (!name || seen.has(name.toLowerCase())) continue;
-      seen.add(name.toLowerCase());
-      out.push(name);
-    }
+  for (const raw of src.split(/[,;]/)) {
+    const name = raw.trim();
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push(name);
   }
   return out.length ? out.join(", ") : null;
 }
@@ -165,8 +178,9 @@ function toPatient(r: PatientRow): PatientInfo {
     ward: r.ward,
     diagnosisText: buildDiagnosis(r.dx_code, r.dx_name),
     allergiesText:
-      decodeEntities(mergeAllergies(r.drug_allergy, r.other_allergy)) ||
-      "ไม่พบประวัติแพ้ยา",
+      decodeEntities(dedupeList(r.drug_allergy)) || "ไม่พบประวัติแพ้ยา",
+    foodAllergiesText:
+      decodeEntities(r.food_allergy_text) || "ไม่พบประวัติแพ้อาหาร",
     religion:
       cleanReligion(r.religion_desc) ??
       (r.religion_code === "99" ? "ไม่ระบุ" : null),

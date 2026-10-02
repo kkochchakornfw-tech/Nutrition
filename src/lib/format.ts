@@ -56,6 +56,14 @@ export function formatAge(
   return age.months > 0 ? `${age.years} ปี ${age.months} เดือน` : `${age.years} ปี`;
 }
 
+/** "ศตวรรณ วงศ์สุทิน" -> ["ศตวรรณ", "วงศ์สุทิน"] — แยกชื่อ/นามสกุลสำหรับเขียน 2 บรรทัดในช่องแคบ (เช่น ชื่อผู้ประเมินบนฟอร์ม NAF) */
+export function splitThaiName(fullName: string): [first: string, last: string] {
+  const trimmed = fullName.trim().replace(/\s+/g, " ");
+  const spaceIndex = trimmed.indexOf(" ");
+  if (spaceIndex === -1) return [trimmed, ""];
+  return [trimmed.slice(0, spaceIndex), trimmed.slice(spaceIndex + 1)];
+}
+
 export function genderLabel(gender: "M" | "F" | "Other" | null | undefined): string {
   if (gender === "M") return "ชาย";
   if (gender === "F") return "หญิง";

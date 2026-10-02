@@ -2,6 +2,7 @@ import {
   formatThaiDate,
   formatThaiDateFromDateTime,
   formatTime,
+  splitThaiName,
 } from "@/lib/format";
 import { SGA_CRITERIA } from "./data";
 import {
@@ -62,6 +63,49 @@ function whiteOut(ctx: Ctx, S: number, cx: number, baseline: number) {
   // เว้นขอบบน/ล่างไว้ไม่ให้ลบเส้นตารางที่อยู่ติดกัน
   ctx.fillRect((cx - width / 2) * S, (baseline - 7.6) * S, width * S, 11 * S);
   ctx.restore();
+}
+
+// ระยะกึ่งกลาง (pt) ระหว่างบรรทัดชื่อ/นามสกุลผู้ประเมิน — เผื่อชื่อยาวเขียนไม่พอในบรรทัดเดียว
+const DIETITIAN_LINE_GAP = 6;
+const DIETITIAN_NAME_SIZE = 7.3;
+
+/** เขียนชื่อผู้ประเมินแยกชื่อ/นามสกุลเป็น 2 บรรทัดซ้อนกลางช่องเดิม — เทมเพลตเดียวกันทุกชื่อ */
+function drawAssessorName(
+  ctx: Ctx,
+  S: number,
+  cx: number,
+  baseline: number,
+  fullName: string,
+) {
+  const width = VISIT_COLUMN_WIDTH;
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect((cx - width / 2) * S, (baseline - 13) * S, width * S, 20 * S);
+  ctx.restore();
+  ctx.fillStyle = INK;
+  const [first, last] = splitThaiName(fullName);
+  drawFitText(
+    ctx,
+    S,
+    first,
+    cx,
+    baseline - 0.8 - DIETITIAN_LINE_GAP,
+    width,
+    DIETITIAN_NAME_SIZE,
+    "center",
+  );
+  if (last) {
+    drawFitText(
+      ctx,
+      S,
+      last,
+      cx,
+      baseline - 0.8 + DIETITIAN_LINE_GAP,
+      width,
+      DIETITIAN_NAME_SIZE,
+      "center",
+    );
+  }
 }
 
 function drawFitText(
@@ -156,27 +200,20 @@ function drawCheckmarks(ctx: Ctx, S: number, current: Assessment) {
     if (!box) continue;
     drawCheck(ctx, S, box, CHECKBOX_SIZE);
 
-    // ตัวเลือก "อื่นๆ" ที่ผู้ประเมินพิมพ์ชื่อโรค/ให้คะแนนเอง
+    // ตัวเลือก "อื่นๆ" ที่ผู้ประเมินพิมพ์ชื่อโรคเอง (คะแนนคงที่ตามกลุ่ม 3/6 แก้ไม่ได้)
     const option = criteria.options[optionIndex];
     if (option.isOther && answer.customLabel) {
       const field =
         option.score >= 6 ? FIELDS.diseaseOther6 : FIELDS.diseaseOther3;
-      const changed = answer.scoreSnapshot !== option.score;
-      drawFieldText(
-        ctx,
-        S,
-        field,
-        changed
-          ? `${answer.customLabel} [${answer.scoreSnapshot}]`
-          : answer.customLabel,
-      );
+      drawFieldText(ctx, S, field, answer.customLabel);
     }
   }
 }
 
 function drawVisitColumns(ctx: Ctx, S: number, visits: Assessment[]) {
   for (const visit of visits) {
-    const col = visit.visitNo - 1;
+    // แผ่นกระดาษมี 3 คอลัมน์เสมอ — ครั้งที่ 4, 7, ... (แผ่นถัดไป) ก็วนกลับมาคอลัมน์ 0
+    const col = (visit.visitNo - 1) % 3;
     const cx = VISIT_COLUMNS[col];
     if (cx === undefined) continue;
 
@@ -229,7 +266,7 @@ function drawVisitColumns(ctx: Ctx, S: number, visits: Assessment[]) {
     if (sgaBox) drawCheck(ctx, S, sgaBox, SGA_BOX_SIZE);
     cell(formatThaiDateFromDateTime(visit.assessedAt), SUMMARY_BASELINES.date);
     cell(formatTime(visit.assessedAt), SUMMARY_BASELINES.time);
-    cell(visit.assessorName, SUMMARY_BASELINES.dietitian);
+    drawAssessorName(ctx, S, cx, SUMMARY_BASELINES.dietitian, visit.assessorName);
   }
 }
 

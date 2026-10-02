@@ -8,6 +8,7 @@ import { LogoutButton } from "@/components/LogoutButton";
 import {
   CalculatorIcon,
   ClipboardIcon,
+  DropletIcon,
   HistoryIcon,
   HomeIcon,
   MenuIcon,
@@ -29,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "หน้าแรก", icon: HomeIcon, exact: true },
   { href: "/sga", label: "แบบประเมิน SGA/NAF", icon: ClipboardIcon, accent: "text-emerald-600" },
   { href: "/menu2", label: "คำนวณแคลอรี่/สารอาหาร", icon: CalculatorIcon, accent: "text-amber-600" },
+  { href: "/mis", label: "ประเมินผู้ป่วยไตเทียม (MIS)", icon: DropletIcon, accent: "text-sky-600" },
   { href: "/history", label: "ประวัติ", icon: HistoryIcon },
 ];
 

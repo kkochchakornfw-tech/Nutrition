@@ -25,7 +25,6 @@ export interface AssessmentAnswerInput {
   optionId?: number; // ไม่มีเมื่อ notApplicable = true
   notApplicable?: boolean;
   customLabel?: string;
-  scoreOverride?: number;
 }
 
 export interface AssessmentAnswer {
@@ -42,7 +41,8 @@ export interface AssessmentAnswer {
 export interface CreateAssessmentInput {
   hn: string;
   vnAn: string | null;
-  visitNo: 1 | 2 | 3;
+  /** ลำดับครั้งที่ประเมินโดยรวม (ไม่จำกัดที่ 3 — แผ่นถัดไปเริ่มที่ 4, 7, ... ดู buildNafFormData) */
+  visitNo: number;
   assessedAt: string; // ISO datetime
   assessorName: string;
   chiefComplaint: string | null;
@@ -62,7 +62,7 @@ export interface Assessment {
   id: number;
   hn: string;
   vnAn: string | null;
-  visitNo: 1 | 2 | 3;
+  visitNo: number;
   assessedAt: string;
   assessorName: string;
   chiefComplaint: string | null;
@@ -85,7 +85,7 @@ export interface Assessment {
 export interface AssessmentSummary {
   id: number;
   hn: string;
-  visitNo: 1 | 2 | 3;
+  visitNo: number;
   assessedAt: string;
   assessorName: string;
   totalScore: number;

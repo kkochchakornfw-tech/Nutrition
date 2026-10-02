@@ -34,4 +34,12 @@ export const FORM_KIND_META: Record<
     activeFilter: "bg-amber-500 text-amber-950 ring-amber-500",
     dot: "bg-amber-500",
   },
+  mis: {
+    label: "ประเมินผู้ป่วยไตเทียม (MIS)",
+    shortLabel: "MIS",
+    bar: "bg-sky-500",
+    chip: "bg-sky-50 text-sky-700 ring-sky-200",
+    activeFilter: "bg-sky-600 text-white ring-sky-600",
+    dot: "bg-sky-500",
+  },
 };

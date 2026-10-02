@@ -13,6 +13,7 @@ import {
   ArrowRightIcon,
   CalculatorIcon,
   ClipboardIcon,
+  DropletIcon,
   LeafIcon,
   PlusIcon,
   SearchIcon,
@@ -162,7 +163,7 @@ export default async function HomePage() {
         >
           เมนูหลัก
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <ModuleCard
             href="/sga"
             icon={ClipboardIcon}
@@ -176,6 +177,13 @@ export default async function HomePage() {
             tone="bg-amber-50 text-amber-700 ring-amber-100"
             title="คำนวณแคลอรี่/สารอาหารต่อวัน"
             description="คำนวณพลังงานรวมและสัดส่วนสารอาหาร (CHO/PRO/FAT) ต่อวันของผู้ป่วย"
+          />
+          <ModuleCard
+            href="/mis"
+            icon={DropletIcon}
+            tone="bg-sky-50 text-sky-700 ring-sky-100"
+            title="ประเมินภาวะโภชนาการผู้ป่วยไตเทียม"
+            description="แบบประเมิน MIS (M/R-NUT-003.1) สำหรับผู้ป่วยที่ฟอกเลือดด้วยเครื่องไตเทียม"
           />
         </div>
       </section>
