@@ -138,15 +138,6 @@ export function LoginForm() {
               </div>
             </form>
           </div>
-
-          <p
-            className="login-fade-up mt-5 rounded-lg bg-zinc-100 px-4 py-3 text-xs text-zinc-500"
-            style={{ animationDelay: "0.85s" }}
-          >
-            บัญชีทดสอบ (mock auth — รอเชื่อมต่อระบบพนักงานจริง):
-            <br />
-            10001 / 1234 หรือ 10002 / 1234
-          </p>
         </div>
       </div>
     </div>

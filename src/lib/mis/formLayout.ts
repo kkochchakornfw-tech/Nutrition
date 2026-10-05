@@ -122,7 +122,7 @@ export const FIELDS = {
   // กรอบข้อมูลผู้ป่วยมุมขวาบน (เป็นภาพแบนราบในไฟล์ต้นฉบับ วัดพิกัดจากภาพ — เหมือน SGA)
   patientName: { x: 355, width: 125, baseline: 25.3, size: 8 },
   dateOfBirth: { x: 401, width: 89, baseline: 38.8, size: 8 },
-  age: { x: 328, width: 160, baseline: 52.3, size: 8 },
+  age: { x: 339, width: 149, baseline: 52.3, size: 8 },
   hn: { x: 342, width: 40, baseline: 65.7, size: 7.5 },
   vnAn: { x: 433, width: 60, baseline: 65.7, size: 7.5 },
   admitDate: { x: 376, width: 50, baseline: 79.2, size: 7 },
