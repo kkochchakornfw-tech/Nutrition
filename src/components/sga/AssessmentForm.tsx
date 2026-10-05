@@ -29,6 +29,18 @@ import {
   SGA_RESULT_META,
 } from "@/lib/sga/scoring";
 
+const DIET_ORDER_OPTIONS = [
+  "Regular diet",
+  "Soft diet",
+  "Clear liquid diet",
+  "Full liquid diet/ Fluid diet",
+  "Enteral nutrition",
+  "NPO /Nothing per oral",
+  "none",
+];
+
+const DIET_CUSTOM = "__custom__";
+
 function nowForInput(): string {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -96,6 +108,9 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
   const [vnAn, setVnAn] = useState(initial?.vnAn ?? "");
   const [chiefComplaint, setChiefComplaint] = useState(initial?.chiefComplaint ?? "");
   const [dietOrder, setDietOrder] = useState(initial?.dietOrder ?? "");
+  const [dietCustom, setDietCustom] = useState(
+    !!initial?.dietOrder && !DIET_ORDER_OPTIONS.includes(initial.dietOrder),
+  );
   const [religion, setReligion] = useState(initial?.religion ?? "");
   const [infoSource, setInfoSource] = useState<InfoSource>(initial?.infoSource ?? "patient");
   const [heightCm, setHeightCm] = useState(initial ? String(initial.heightCm) : "");
@@ -562,11 +577,38 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
                     />
                   </Field>
                   <Field label="Diet Order" htmlFor="diet-order">
-                    <Input
+                    <Select
                       id="diet-order"
-                      value={dietOrder}
-                      onChange={(e) => setDietOrder(e.target.value)}
-                    />
+                      value={dietCustom ? DIET_CUSTOM : dietOrder}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === DIET_CUSTOM) {
+                          setDietCustom(true);
+                          setDietOrder("");
+                        } else {
+                          setDietCustom(false);
+                          setDietOrder(v);
+                        }
+                      }}
+                    >
+                      <option value="">- เลือก -</option>
+                      {DIET_ORDER_OPTIONS.map((o) => (
+                        <option key={o} value={o}>
+                          {o}
+                        </option>
+                      ))}
+                      <option value={DIET_CUSTOM}>อื่นๆ (พิมพ์เอง)</option>
+                    </Select>
+                    {dietCustom && (
+                      <Input
+                        className="mt-2"
+                        aria-label="Diet Order (พิมพ์เอง)"
+                        placeholder="พิมพ์ Diet Order"
+                        value={dietOrder}
+                        onChange={(e) => setDietOrder(e.target.value)}
+                        autoFocus
+                      />
+                    )}
                   </Field>
                 </div>
               </SubGroup>
