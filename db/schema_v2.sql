@@ -105,6 +105,7 @@ CREATE TABLE assessments (
     diet_order              VARCHAR(255) NULL,           -- [v2]
     religion                VARCHAR(50) NULL,            -- [v2] ศาสนา
     info_source             ENUM('patient','relative','other') NULL,  -- [v2] ข้อมูลจาก
+    info_source_other       VARCHAR(100) NULL,           -- ข้อความที่ระบุเองเมื่อ info_source = 'other'
 
     height_cm               DECIMAL(5,1) NULL,           -- [v2] ส่วนสูง (ต่อครั้งที่ประเมิน)
     weight_kg               DECIMAL(5,1) NULL,           -- [v2] น้ำหนักปัจจุบัน

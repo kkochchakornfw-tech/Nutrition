@@ -189,6 +189,7 @@ export function diffSga(before: Assessment, after: Assessment): AuditChange[] {
     ["Diet Order", (r) => r.dietOrder],
     ["ศาสนา", (r) => r.religion],
     ["ข้อมูลจาก", (r) => r.infoSource],
+    ["ข้อมูลจาก (ระบุเอง)", (r) => r.infoSourceOther],
     ["ส่วนสูง (ซม.)", (r) => r.heightCm],
     ["น้ำหนัก (กก.)", (r) => r.weightKg],
     ["การวินิจฉัยโรค", (r) => r.diagnosisSnapshot],

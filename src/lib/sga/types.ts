@@ -49,6 +49,8 @@ export interface CreateAssessmentInput {
   dietOrder: string | null;
   religion: string | null;
   infoSource: InfoSource | null;
+  /** ข้อความที่ระบุเองเมื่อ infoSource = "other" */
+  infoSourceOther: string | null;
   heightCm: number;
   weightKg: number;
   patientNameSnapshot: string;
@@ -69,6 +71,7 @@ export interface Assessment {
   dietOrder: string | null;
   religion: string | null;
   infoSource: InfoSource | null;
+  infoSourceOther: string | null;
   heightCm: number;
   weightKg: number;
   bmi: number;

@@ -170,6 +170,8 @@ export const FIELDS = {
   diagnosis: { x: 372, width: 186, baseline: 124.4, size: 9.5 },
   dietOrder: { x: 88, width: 158, baseline: 142.4, size: 9.5 },
   religion: { x: 273, width: 62, baseline: 142.4, size: 9.5 },
+  // เส้นประหลังคำว่า "อื่นๆ" ของช่อง ข้อมูลจาก
+  infoSourceOther: { x: 463, width: 52, baseline: 142.4, size: 9 },
 
   height: { x: 79, width: 47, baseline: 207.2, size: 9.5 },
   weight: { x: 191, width: 51, baseline: 207.2, size: 9.5 },

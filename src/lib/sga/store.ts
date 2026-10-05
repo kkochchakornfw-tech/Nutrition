@@ -29,6 +29,7 @@ interface AssessmentRow extends RowDataPacket {
   diet_order: string | null;
   religion: string | null;
   info_source: InfoSource | null;
+  info_source_other: string | null;
   height_cm: string | number;
   weight_kg: string | number;
   bmi: string | number;
@@ -80,6 +81,7 @@ function toAssessment(
     dietOrder: r.diet_order,
     religion: r.religion,
     infoSource: r.info_source,
+    infoSourceOther: r.info_source_other,
     heightCm: Number(r.height_cm),
     weightKg: Number(r.weight_kg),
     bmi: Number(r.bmi),
@@ -201,10 +203,10 @@ export async function createAssessment(
   const [result] = await pool.query<ResultSetHeader>(
     `INSERT INTO assessments
        (hn, vn_an, visit_no, assessed_at, assessor_dietitian_id, assessor_name_snapshot,
-        created_by_user_id, chief_complaint, diet_order, religion, info_source,
+        created_by_user_id, chief_complaint, diet_order, religion, info_source, info_source_other,
         height_cm, weight_kg, bmi, patient_name_snapshot, diagnosis_snapshot, allergies_snapshot,
         total_score, sga_result)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.hn,
       input.vnAn,
@@ -217,6 +219,7 @@ export async function createAssessment(
       input.dietOrder,
       input.religion,
       input.infoSource,
+      input.infoSource === "other" ? input.infoSourceOther : null,
       input.heightCm,
       input.weightKg,
       bmi,
@@ -335,7 +338,7 @@ export async function updateAssessment(
   const [result] = await pool.query<ResultSetHeader>(
     `UPDATE assessments SET
         vn_an = ?, visit_no = ?, assessed_at = ?, assessor_dietitian_id = ?, assessor_name_snapshot = ?,
-        chief_complaint = ?, diet_order = ?, religion = ?, info_source = ?,
+        chief_complaint = ?, diet_order = ?, religion = ?, info_source = ?, info_source_other = ?,
         height_cm = ?, weight_kg = ?, bmi = ?, patient_name_snapshot = ?, diagnosis_snapshot = ?,
         allergies_snapshot = ?, total_score = ?, sga_result = ?
       WHERE id = ?`,
@@ -349,6 +352,7 @@ export async function updateAssessment(
       input.dietOrder,
       input.religion,
       input.infoSource,
+      input.infoSource === "other" ? input.infoSourceOther : null,
       input.heightCm,
       input.weightKg,
       bmi,

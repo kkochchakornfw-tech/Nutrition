@@ -370,6 +370,8 @@ export function drawNafForm(
   drawFieldText(ctx, S, FIELDS.religion, current.religion);
   if (current.infoSource)
     drawCheck(ctx, S, INFO_SOURCE_BOXES[current.infoSource], CHECKBOX_SIZE);
+  if (current.infoSource === "other")
+    drawFieldText(ctx, S, FIELDS.infoSourceOther, current.infoSourceOther);
 
   // 1. ส่วนสูง น้ำหนัก BMI
   drawFieldText(ctx, S, FIELDS.height, String(current.heightCm));

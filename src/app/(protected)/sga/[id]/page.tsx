@@ -68,7 +68,13 @@ export default async function AssessmentDetailPage({
           <Item label="ผู้ประเมิน" value={assessment.assessorName} />
           <Item label="VN/AN" value={assessment.vnAn ?? "-"} />
           <Item label="ศาสนา" value={assessment.religion ?? "-"} />
-          <Item label="ข้อมูลจาก" value={assessment.infoSource ? INFO_SOURCE_LABEL[assessment.infoSource] : "-"} />
+          <Item label="ข้อมูลจาก" value={
+              assessment.infoSource === "other" && assessment.infoSourceOther
+                ? `อื่นๆ: ${assessment.infoSourceOther}`
+                : assessment.infoSource
+                  ? INFO_SOURCE_LABEL[assessment.infoSource]
+                  : "-"
+            } />
           <Item label="Diet Order" value={assessment.dietOrder ?? "-"} />
           <Item label="ส่วนสูง" value={`${assessment.heightCm} ซม.`} />
           <Item label="น้ำหนัก" value={`${assessment.weightKg} กก.`} />

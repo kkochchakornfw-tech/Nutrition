@@ -113,6 +113,7 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
   );
   const [religion, setReligion] = useState(initial?.religion ?? "");
   const [infoSource, setInfoSource] = useState<InfoSource>(initial?.infoSource ?? "patient");
+  const [infoSourceOther, setInfoSourceOther] = useState(initial?.infoSourceOther ?? "");
   const [heightCm, setHeightCm] = useState(initial ? String(initial.heightCm) : "");
   const [weightKg, setWeightKg] = useState(initial ? String(initial.weightKg) : "");
   const [diagnosisSnapshot, setDiagnosisSnapshot] = useState(initial?.diagnosisSnapshot ?? "");
@@ -355,6 +356,8 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
           dietOrder: dietOrder || null,
           religion: religion || null,
           infoSource: infoSource || null,
+          infoSourceOther:
+            infoSource === "other" ? infoSourceOther.trim() || null : null,
           heightCm: Number(heightCm),
           weightKg: Number(weightKg),
           patientNameSnapshot: patientName,
@@ -568,6 +571,17 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
                       <option value="relative">ญาติ</option>
                       <option value="other">อื่นๆ</option>
                     </Select>
+                    {infoSource === "other" && (
+                      <Input
+                        className="mt-2"
+                        aria-label="ข้อมูลจาก (ระบุเอง)"
+                        placeholder="ระบุแหล่งข้อมูล"
+                        maxLength={100}
+                        value={infoSourceOther}
+                        onChange={(e) => setInfoSourceOther(e.target.value)}
+                        autoFocus
+                      />
+                    )}
                   </Field>
                   <Field label="ศาสนา" htmlFor="religion">
                     <Input
