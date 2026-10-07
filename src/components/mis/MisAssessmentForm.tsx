@@ -66,10 +66,10 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
   const [assessorRole, setAssessorRole] = useState<AssessorRole>(initial?.assessorRole ?? "dietitian");
   const [vnAn, setVnAn] = useState(initial?.vnAn ?? "");
   const [comorbidityText, setComorbidityText] = useState(initial?.comorbidityText ?? "");
-  const [serumCreatinine, setSerumCreatinine] = useState(numToStr(initial?.serumCreatinine));
-  const [bun, setBun] = useState(numToStr(initial?.bun));
-  const [serumAlbumin, setSerumAlbumin] = useState(numToStr(initial?.serumAlbumin));
-  const [serumTibc, setSerumTibc] = useState(numToStr(initial?.serumTibc));
+  const [serumCreatinine, setSerumCreatinine] = useState(initial?.serumCreatinine ?? "");
+  const [bun, setBun] = useState(initial?.bun ?? "");
+  const [serumAlbumin, setSerumAlbumin] = useState(initial?.serumAlbumin ?? "");
+  const [serumTibc, setSerumTibc] = useState(initial?.serumTibc ?? "");
   const [heightCm, setHeightCm] = useState(numToStr(initial?.heightCm));
   const [dryWeightKg, setDryWeightKg] = useState(numToStr(initial?.dryWeightKg));
   const [ibwKg, setIbwKg] = useState(numToStr(initial?.ibwKg));
@@ -233,10 +233,10 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
           assessorName,
           assessorRole,
           comorbidityText: comorbidityText || null,
-          serumCreatinine: toNumberOrNull(serumCreatinine),
-          bun: toNumberOrNull(bun),
-          serumAlbumin: toNumberOrNull(serumAlbumin),
-          serumTibc: toNumberOrNull(serumTibc),
+          serumCreatinine: serumCreatinine.trim() || null,
+          bun: bun.trim() || null,
+          serumAlbumin: serumAlbumin.trim() || null,
+          serumTibc: serumTibc.trim() || null,
           heightCm: toNumberOrNull(heightCm),
           dryWeightKg: toNumberOrNull(dryWeightKg),
           ibwKg: toNumberOrNull(ibwKg),
@@ -372,9 +372,7 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
                   <Field label="Serum creatinine" suffix="mg/dL" htmlFor="creatinine">
                     <Input
                       id="creatinine"
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
+                      autoComplete="off"
                       value={serumCreatinine}
                       onChange={(e) => setSerumCreatinine(e.target.value)}
                     />
@@ -382,9 +380,7 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
                   <Field label="BUN" suffix="mg/dL" htmlFor="bun">
                     <Input
                       id="bun"
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
+                      autoComplete="off"
                       value={bun}
                       onChange={(e) => setBun(e.target.value)}
                     />
@@ -392,9 +388,7 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
                   <Field label="Serum albumin" suffix="g/dl" htmlFor="serum-albumin">
                     <Input
                       id="serum-albumin"
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
+                      autoComplete="off"
                       value={serumAlbumin}
                       onChange={(e) => setSerumAlbumin(e.target.value)}
                     />
@@ -402,9 +396,7 @@ export function MisAssessmentForm({ initial }: { initial?: MisAssessment }) {
                   <Field label="Serum TIBC" suffix="ug/dL" htmlFor="serum-tibc">
                     <Input
                       id="serum-tibc"
-                      type="number"
-                      step="0.1"
-                      inputMode="decimal"
+                      autoComplete="off"
                       value={serumTibc}
                       onChange={(e) => setSerumTibc(e.target.value)}
                     />

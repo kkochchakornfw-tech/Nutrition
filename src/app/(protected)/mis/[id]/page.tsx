@@ -63,10 +63,10 @@ export default async function MisAssessmentDetailPage({
           <Item label="วันที่/เวลาประเมิน" value={new Date(assessment.assessedAt).toLocaleString("th-TH")} />
           <Item label="ผู้ประเมิน" value={`${assessment.assessorName} (${ROLE_LABEL[assessment.assessorRole]})`} />
           <Item label="VN/AN" value={assessment.vnAn ?? "-"} />
-          <Item label="Serum creatinine" value={assessment.serumCreatinine != null ? `${assessment.serumCreatinine} mg/dL` : "-"} />
-          <Item label="BUN" value={assessment.bun != null ? `${assessment.bun} mg/dL` : "-"} />
-          <Item label="Serum albumin" value={assessment.serumAlbumin != null ? `${assessment.serumAlbumin} g/dl` : "-"} />
-          <Item label="Serum TIBC" value={assessment.serumTibc != null ? `${assessment.serumTibc} ug/dL` : "-"} />
+          <Item label="Serum creatinine" value={assessment.serumCreatinine ? `${assessment.serumCreatinine} mg/dL` : "-"} />
+          <Item label="BUN" value={assessment.bun ? `${assessment.bun} mg/dL` : "-"} />
+          <Item label="Serum albumin" value={assessment.serumAlbumin ? `${assessment.serumAlbumin} g/dl` : "-"} />
+          <Item label="Serum TIBC" value={assessment.serumTibc ? `${assessment.serumTibc} ug/dL` : "-"} />
           <Item label="ส่วนสูง" value={assessment.heightCm != null ? `${assessment.heightCm} ซม.` : "-"} />
           <Item label="Dry Weight" value={assessment.dryWeightKg != null ? `${assessment.dryWeightKg} กก.` : "-"} />
           <Item label="IBW" value={assessment.ibwKg != null ? `${assessment.ibwKg} กก.` : "-"} />

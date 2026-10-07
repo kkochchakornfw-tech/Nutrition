@@ -14,11 +14,11 @@ import {
 } from "./formLayout";
 import type { MisFormData } from "./misData";
 
-// ช่องติ๊กสีแดง ฟอนต์ Sarabun — เหมือนฟอร์ม SGA
+// ช่องติ๊กสีน้ำเงิน ฟอนต์ Sarabun
 const INK = "#000000";
 const FONT_FAMILY =
   '"Sarabun", "Leelawadee UI", "Tahoma", "Noto Sans Thai", sans-serif';
-const CHECK_INK = "#dc2626";
+const CHECK_INK = "#1d4ed8";
 
 type Ctx = CanvasRenderingContext2D;
 
@@ -210,10 +210,10 @@ export function drawMisForm(
   // หัวฟอร์ม
   drawFieldText(ctx, S, FIELDS.date, formatThaiDateFromDateTime(assessment.assessedAt), "center");
   drawFieldText(ctx, S, FIELDS.time, formatTime(assessment.assessedAt), "center");
-  drawFieldText(ctx, S, FIELDS.creatinine, assessment.serumCreatinine?.toString(), "center");
-  drawFieldText(ctx, S, FIELDS.bun, assessment.bun?.toString(), "center");
-  drawFieldText(ctx, S, FIELDS.albuminLab, assessment.serumAlbumin?.toString(), "center");
-  drawFieldText(ctx, S, FIELDS.tibcLab, assessment.serumTibc?.toString(), "center");
+  drawFieldText(ctx, S, FIELDS.creatinine, assessment.serumCreatinine, "center");
+  drawFieldText(ctx, S, FIELDS.bun, assessment.bun, "center");
+  drawFieldText(ctx, S, FIELDS.albuminLab, assessment.serumAlbumin, "center");
+  drawFieldText(ctx, S, FIELDS.tibcLab, assessment.serumTibc, "center");
   drawFieldText(ctx, S, FIELDS.comorbidity, assessment.comorbidityText);
   drawFieldText(ctx, S, FIELDS.height, assessment.heightCm?.toString(), "center");
   drawFieldText(ctx, S, FIELDS.dryWeight, assessment.dryWeightKg?.toString(), "center");

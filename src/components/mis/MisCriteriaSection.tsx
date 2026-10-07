@@ -36,7 +36,7 @@ export function MisCriteriaSection({
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${
             answered
-              ? "bg-green-600 text-white"
+              ? "bg-blue-600 text-white"
               : "border border-zinc-300 bg-white text-zinc-600"
           }`}
         >

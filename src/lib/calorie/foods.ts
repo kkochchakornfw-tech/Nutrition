@@ -23,8 +23,7 @@ export const FOOD_EXCHANGES: FoodExchange[] = [
   { key: "fruit", labelTh: "ผลไม้", facCho: 15, facPro: 0, facFat: 0, facKcal: 60 },
   { key: "veg_a", labelTh: "ผัก (ก)", facCho: 0, facPro: 0, facFat: 0, facKcal: 0 },
   { key: "veg_b", labelTh: "ผัก (ข)", facCho: 5, facPro: 2, facFat: 0, facKcal: 25 },
-  { key: "rice", labelTh: "ข้าว", facCho: 15, facPro: 2, facFat: 0, facKcal: 80 },
-  { key: "starch", labelTh: "แป้ง", facCho: 18, facPro: 2, facFat: 0, facKcal: 80 },
+  { key: "rice", labelTh: "ข้าว-แป้ง", facCho: 18, facPro: 2, facFat: 0, facKcal: 80 },
   { key: "egg_white", labelTh: "ไข่ขาว (ฟอง)", facCho: 0, facPro: 3.5, facFat: 0, facKcal: 14 },
   { key: "meat_high_fat", labelTh: "เนื้อสัตว์ (มันมาก)", facCho: 0, facPro: 7, facFat: 8, facKcal: 100 },
   { key: "meat_med_fat", labelTh: "เนื้อสัตว์ (มันปานกลาง)", facCho: 0, facPro: 7, facFat: 5, facKcal: 75 },
@@ -32,7 +31,7 @@ export const FOOD_EXCHANGES: FoodExchange[] = [
   { key: "fat", labelTh: "ไขมัน", facCho: 0, facPro: 0, facFat: 5, facKcal: 45 },
   { key: "sugar", labelTh: "น้ำตาล", facCho: 5, facPro: 0, facFat: 0, facKcal: 20 },
   // ในชีตไม่มีสูตรช่อง calories ของแถวนี้ (J25 ว่าง) — ใช้ facKcal 80 เหมือนแถวอื่น
-  { key: "starch_plod", labelTh: "แป้งปลอด", facCho: 15, facPro: 0, facFat: 0, facKcal: 80 },
+  { key: "starch_plod", labelTh: "แป้งปลอด", facCho: 18, facPro: 0, facFat: 0, facKcal: 80 },
 ];
 
 /** ค่าเริ่มต้นของช่อง "ส่วน" ทุกรายการ */

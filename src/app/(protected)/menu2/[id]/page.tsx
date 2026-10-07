@@ -5,7 +5,9 @@ import { MacroBar, MacroTable, TotalEnergy } from "@/components/calorie/MacroBre
 import { FoodPlanTable } from "@/components/calorie/FoodPlanTable";
 import { NutritionFlag } from "@/components/calorie/NutritionFlag";
 import { ArrowRightIcon, CalculatorIcon, EditIcon, HistoryIcon } from "@/components/ui/icons";
+import { PrintExchangeImagesButton } from "@/components/PrintExchangeImagesButton";
 import { AuditTrail } from "@/components/AuditTrail";
+import { flagSlots } from "@/lib/calorie/flag";
 import { getCalculationById } from "@/lib/calorie/store";
 import { formatThaiDateFromDateTime, formatTime } from "@/lib/format";
 
@@ -19,6 +21,15 @@ export default async function CalculationDetailPage({
   if (!calc) notFound();
 
   const { inputs, result } = calc;
+  const slots = calc.foodPlan ? flagSlots(calc.foodPlan) : null;
+  const exchangeFill = {
+    kcal: result.totalEnergy,
+    grain: slots?.grain.value ?? 0,
+    veg: slots?.veg.value ?? 0,
+    fruit: slots?.fruit.value ?? 0,
+    meat: (slots?.meat.value ?? 0) * 2, // 1 ส่วน = 2 ช้อนกินข้าว
+    milk: slots?.milk.value ?? 0,
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -45,6 +56,7 @@ export default async function CalculationDetailPage({
               พิมพ์ธงโภชนาการ
             </Link>
           )}
+          <PrintExchangeImagesButton fill={exchangeFill} />
           <Link
             href={`/menu2/${calc.id}/edit`}
             className="inline-flex min-h-10 items-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"

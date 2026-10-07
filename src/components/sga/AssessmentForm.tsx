@@ -157,6 +157,19 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** ตั้งแผ่นที่/ครั้งที่ให้ต่อจากการประเมินล่าสุดของ HN นี้ (ไม่มีประวัติ = แผ่น 1 ครั้งที่ 1) */
+  async function prefillNextVisit(hnValue: string) {
+    try {
+      const res = await fetch(`/api/sga/assessments?hn=${encodeURIComponent(hnValue)}`);
+      if (!res.ok) return;
+      const data: { assessments?: { visitNo: number }[] } = await res.json();
+      const maxVisitNo = Math.max(0, ...(data.assessments ?? []).map((a) => a.visitNo));
+      setVisitNo(maxVisitNo + 1);
+    } catch {
+      // ดึงประวัติไม่ได้ — คงค่าเดิม ผู้ใช้ปรับเองได้
+    }
+  }
+
   async function handleLookup(hnValue?: string) {
     const target = (hnValue ?? hn).trim();
     if (!target) return;
@@ -184,6 +197,7 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
         setReligion(data.patient.religion ?? "");
         setChiefComplaint(data.patient.chiefComplaint ?? "");
         setVnAn(data.patient.vnAn ?? "");
+        await prefillNextVisit(target);
       }
       setSearched(true);
     } catch (err) {
@@ -201,6 +215,17 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
     if (!h || !w) return null;
     return calcBmi(h, w);
   }, [heightCm, weightKg]);
+
+  /** ติ๊กตัวเลือก BMI ให้อัตโนมัติตามช่วงค่า เมื่อผู้ใช้แก้ส่วนสูง/น้ำหนัก (แก้เองทีหลังได้) */
+  function autoSelectBmi(h: string, w: string) {
+    const bmiCriteria = criteria.find((c) => c.criteriaKey === "bmi");
+    if (!bmiCriteria || !Number(h) || !Number(w)) return;
+    const value = calcBmi(Number(h), Number(w));
+    const rangeOrder = value < 17 ? 4 : value < 18.5 ? 2 : value < 25 ? 1 : value < 35 ? 3 : 5;
+    const option = bmiCriteria.options.find((o) => o.sortOrder === rangeOrder);
+    if (!option) return;
+    updateCriteriaAnswer(bmiCriteria.id, { ...emptyAnswerState(), optionIds: [option.id] });
+  }
 
   const totalScore = useMemo(
     () =>
@@ -644,7 +669,10 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
                         min="0"
                         inputMode="decimal"
                         value={heightCm}
-                        onChange={(e) => setHeightCm(e.target.value)}
+                        onChange={(e) => {
+                          setHeightCm(e.target.value);
+                          autoSelectBmi(e.target.value, weightKg);
+                        }}
                         aria-invalid={heightError ? true : undefined}
                         aria-describedby={
                           heightError ? "height-error" : undefined
@@ -667,7 +695,10 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
                         min="0"
                         inputMode="decimal"
                         value={weightKg}
-                        onChange={(e) => setWeightKg(e.target.value)}
+                        onChange={(e) => {
+                          setWeightKg(e.target.value);
+                          autoSelectBmi(heightCm, e.target.value);
+                        }}
                         aria-invalid={weightError ? true : undefined}
                         aria-describedby={
                           weightError ? "weight-error" : undefined

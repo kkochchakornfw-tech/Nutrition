@@ -43,9 +43,9 @@ export default async function FlagPrintPage({ params }: { params: Promise<{ id: 
           <p className="mt-3 rounded-full bg-white/80 px-6 py-1.5 font-display text-2xl font-semibold text-orange-700 shadow-sm ring-1 ring-orange-200">
             พลังงาน <span className="tabular-nums">{nf(result.totalEnergy)}</span> แคลอรี่
           </p>
-          <p className="mt-3 text-lg text-zinc-800">
-            <span className="text-zinc-500">ชื่อผู้ป่วย</span>{" "}
-            <span className="font-display font-semibold">{calc.patientNameSnapshot}</span>
+          <p className="mt-3 font-display text-lg font-semibold text-zinc-800">{calc.patientNameSnapshot}</p>
+          <p className="text-base text-zinc-600">
+            HN <span className="font-display font-semibold tabular-nums text-zinc-800">{calc.hn}</span>
           </p>
         </header>
 
@@ -59,7 +59,7 @@ export default async function FlagPrintPage({ params }: { params: Promise<{ id: 
                 <div className="px-3 py-3">
                   <p className={`font-display text-lg font-semibold ${m.text}`}>{m.label}</p>
                   <p className="font-display text-3xl font-bold tabular-nums leading-tight text-zinc-900">
-                    {nf(v.grams, 1)} <span className="text-base font-medium text-zinc-600">กรัม</span>
+                    {nf(v.grams)} <span className="text-base font-medium text-zinc-600">กรัม</span>
                   </p>
                   <p className="text-sm tabular-nums text-zinc-500">
                     {nf(v.pct, 1)}% · {nf(v.kcal)} kcal
@@ -77,7 +77,7 @@ export default async function FlagPrintPage({ params }: { params: Promise<{ id: 
 
         <footer className="mt-auto flex w-full flex-wrap items-end justify-between gap-2 border-t border-rose-200/70 pt-2 text-xs text-zinc-600">
           <span>
-            HN {calc.hn} · {formatThaiDateFromDateTime(calc.calculatedAt)} · {calc.performedBy}
+            {formatThaiDateFromDateTime(calc.calculatedAt)}
           </span>
           <FlagPhotoCredits />
         </footer>

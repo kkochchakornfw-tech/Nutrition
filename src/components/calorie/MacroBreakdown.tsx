@@ -72,7 +72,7 @@ export function MacroTable({ result }: { result: MacroResult }) {
                   <span className="hidden font-normal text-zinc-500 sm:inline">{m.label}</span>
                 </span>
               </th>
-              <td className="py-2 text-right text-base font-semibold tabular-nums text-zinc-900">{nf(v.grams)}</td>
+              <td className="py-2 text-right text-base font-semibold tabular-nums text-zinc-900">{nf(v.grams, 0)}</td>
               <td className="py-2 text-right tabular-nums text-zinc-700">{nf(v.pct)}</td>
               <td className="py-2 text-right tabular-nums text-zinc-500">{nf(v.kcal, 0)}</td>
             </tr>

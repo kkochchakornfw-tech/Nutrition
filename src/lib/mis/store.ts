@@ -25,10 +25,10 @@ interface MisAssessmentRow extends RowDataPacket {
   assessor_name_snapshot: string;
   assessor_role: AssessorRole;
   comorbidity_text: string | null;
-  serum_creatinine: string | number | null;
-  bun: string | number | null;
-  serum_albumin: string | number | null;
-  serum_tibc: string | number | null;
+  serum_creatinine: string | null;
+  bun: string | null;
+  serum_albumin: string | null;
+  serum_tibc: string | null;
   height_cm: string | number | null;
   dry_weight_kg: string | number | null;
   ibw_kg: string | number | null;
@@ -75,10 +75,10 @@ function toAssessment(r: MisAssessmentRow, answers: MisAnswer[]): MisAssessment 
     assessorName: r.assessor_name_snapshot,
     assessorRole: r.assessor_role,
     comorbidityText: r.comorbidity_text,
-    serumCreatinine: toNumberOrNull(r.serum_creatinine),
-    bun: toNumberOrNull(r.bun),
-    serumAlbumin: toNumberOrNull(r.serum_albumin),
-    serumTibc: toNumberOrNull(r.serum_tibc),
+    serumCreatinine: r.serum_creatinine,
+    bun: r.bun,
+    serumAlbumin: r.serum_albumin,
+    serumTibc: r.serum_tibc,
     heightCm: toNumberOrNull(r.height_cm),
     dryWeightKg: toNumberOrNull(r.dry_weight_kg),
     ibwKg: toNumberOrNull(r.ibw_kg),

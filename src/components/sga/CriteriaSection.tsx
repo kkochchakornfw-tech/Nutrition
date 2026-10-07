@@ -10,6 +10,9 @@ export interface CriteriaAnswerState {
   notApplicable: boolean;
 }
 
+/** หมวดที่มีตัวเลือก N/A — หมวดอื่นต้องเลือกคำตอบเสมอ */
+const NA_ALLOWED_KEYS = ["albumin", "disease"];
+
 export function emptyAnswerState(): CriteriaAnswerState {
   return {
     optionIds: [],
@@ -157,16 +160,18 @@ export function CriteriaSection({
           })}
         </div>
       )}
-      <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50/50 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:text-blue-950 has-checked:ring-1 has-checked:ring-blue-600">
-        <input
-          type="checkbox"
-          checked={state.notApplicable}
-          onChange={(e) => toggleNotApplicable(e.target.checked)}
-          className="h-4 w-4 shrink-0 cursor-pointer accent-blue-600 focus:outline-none"
-        />
-        <span className="flex-1">N/A (ประเมินไม่ได้ / ไม่เกี่ยวข้อง)</span>
-        <span className="shrink-0 text-xs text-zinc-500">0 คะแนน</span>
-      </label>
+      {NA_ALLOWED_KEYS.includes(criteria.criteriaKey) && (
+        <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-dashed border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 transition-colors duration-150 hover:border-blue-300 hover:bg-blue-50/50 has-checked:border-blue-600 has-checked:bg-blue-50 has-checked:text-blue-950 has-checked:ring-1 has-checked:ring-blue-600">
+          <input
+            type="checkbox"
+            checked={state.notApplicable}
+            onChange={(e) => toggleNotApplicable(e.target.checked)}
+            className="h-4 w-4 shrink-0 cursor-pointer accent-blue-600 focus:outline-none"
+          />
+          <span className="flex-1">N/A (ประเมินไม่ได้ / ไม่เกี่ยวข้อง)</span>
+          <span className="shrink-0 text-xs text-zinc-500">0 คะแนน</span>
+        </label>
+      )}
     </fieldset>
   );
 }

@@ -17,7 +17,7 @@ interface FoodItemRow extends RowDataPacket {
 /** master ตาราง 3 จาก DB เรียงตาม sort_order — ใช้แทน FOOD_EXCHANGES ตอนคำนวณ/แสดงผลจริง */
 export async function getFoodExchangeItems(): Promise<FoodExchange[]> {
   const [rows] = await pool.query<FoodItemRow[]>(
-    "SELECT item_key, label_th, fac_cho, fac_pro, fac_fat, fac_kcal, is_manual FROM food_exchange_items ORDER BY sort_order"
+    "SELECT item_key, label_th, fac_cho, fac_pro, fac_fat, fac_kcal, is_manual FROM food_exchange_items WHERE item_key <> 'starch' ORDER BY sort_order"
   );
   return rows.map((r) => ({
     key: r.item_key,
@@ -38,7 +38,7 @@ export interface FoodItemAdminRow extends FoodExchange {
 /** เหมือน getFoodExchangeItems แต่มี id/sortOrder ด้วย — ใช้ในหน้า admin */
 export async function listFoodExchangeItemsAdmin(): Promise<FoodItemAdminRow[]> {
   const [rows] = await pool.query<FoodItemRow[]>(
-    "SELECT id, item_key, label_th, fac_cho, fac_pro, fac_fat, fac_kcal, is_manual, sort_order FROM food_exchange_items ORDER BY sort_order"
+    "SELECT id, item_key, label_th, fac_cho, fac_pro, fac_fat, fac_kcal, is_manual, sort_order FROM food_exchange_items WHERE item_key <> 'starch' ORDER BY sort_order"
   );
   return rows.map((r) => ({
     id: r.id,

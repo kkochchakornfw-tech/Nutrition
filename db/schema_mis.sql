@@ -47,10 +47,10 @@ CREATE TABLE mis_assessments (
     created_by_user_id      INT NULL,
 
     comorbidity_text        TEXT NULL,                 -- โรคประจำตัวร่วม
-    serum_creatinine        DECIMAL(6,2) NULL,
-    bun                     DECIMAL(6,2) NULL,
-    serum_albumin           DECIMAL(4,2) NULL,
-    serum_tibc              DECIMAL(6,1) NULL,
+    serum_creatinine        VARCHAR(50) NULL,
+    bun                     VARCHAR(50) NULL,
+    serum_albumin           VARCHAR(50) NULL,
+    serum_tibc              VARCHAR(50) NULL,
 
     height_cm               DECIMAL(5,1) NULL,
     dry_weight_kg           DECIMAL(5,1) NULL,
