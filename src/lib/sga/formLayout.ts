@@ -164,7 +164,6 @@ export const FIELDS = {
   vnAn: { x: 421, width: 72, baseline: 66.0, size: 8.5 },
   admitDate: { x: 376, width: 48, baseline: 79.9, size: 8.5 },
   gender: { x: 454, width: 38, baseline: 79.9, size: 8.5 },
-  allergies: { x: 352, width: 140, baseline: 93.0, size: 8.5 },
 
   chiefComplaint: { x: 144, width: 181, baseline: 124.4, size: 9.5 },
   diagnosis: { x: 372, width: 186, baseline: 124.4, size: 9.5 },

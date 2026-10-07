@@ -12,7 +12,6 @@ const BASE_SELECT = `
                   br.description AS religion_desc,
          TRIM(p.religion::text) AS religion_code,
          imed_get_all_drug_allergy(p.patient_id) AS drug_allergy,
-         fa.food_allergy_text,
          cv.vn_an, cv.visit_date, cv.ward, cv.dx_code, cv.dx_name,
          cv.chief_complaint
     FROM patient p
@@ -20,14 +19,6 @@ const BASE_SELECT = `
     LEFT JOIN base_religion br
            ON br.base_religion_id::text = TRIM(p.religion::text)
            AND TRIM(p.religion::text) <> '99'
-    -- แผนกโภชนาการใช้ "แพ้อาหาร" จาก nt_allergy (ไม่ใช่แพ้ยา) — รวมจากทุกชุดบันทึกโภชนาการของผู้ป่วย
-    -- (ไม่ใช่เฉพาะครั้งล่าสุด: ครั้งล่าสุดอาจว่าง ทั้งที่ครั้งก่อนๆ ระบุว่าแพ้) แล้ว dedupe ฝั่ง TS
-    LEFT JOIN LATERAL (
-      SELECT STRING_AGG(DISTINCT NULLIF(TRIM(na.note), ''), ', ') AS food_allergy_text
-        FROM nt_patient_nutrition npn
-        JOIN nt_allergy na ON na.nt_patient_nutrition_id = npn.nt_patient_nutrition_id
-       WHERE npn.patient_id = p.patient_id
-    ) fa ON TRUE
     LEFT JOIN LATERAL (
       SELECT CASE WHEN NULLIF(TRIM(v.an), '') IS NOT NULL
                   THEN format_an(v.an) ELSE format_vn(v.vn) END AS vn_an,
@@ -91,7 +82,6 @@ interface PatientRow {
   birthdate: string | Date | null;
   gender_name: string | null;
   drug_allergy: string | null;
-  food_allergy_text: string | null;
   vn_an: string | null;
   visit_date: string | null;
   ward: string | null;
@@ -151,17 +141,6 @@ function dedupeList(src: string | null): string | null {
   return out.length ? out.join(", ") : null;
 }
 
-const NO_ALLERGY = /^(ไม่แพ้|ไม่มี|ปฏิเสธ|none|nos+(knowns+)?(foods+)?allerg)/i;
-
-/** รวมแพ้อาหารทุกครั้ง; ถ้ามีรายการแพ้จริงอยู่ ให้ตัดรายการแนว "ไม่แพ้อาหาร" ของครั้งอื่นทิ้ง */
-function foodAllergyList(src: string | null): string | null {
-  const merged = dedupeList(src);
-  if (!merged) return null;
-  const items = merged.split(", ");
-  const real = items.filter((i) => !NO_ALLERGY.test(i));
-  return (real.length ? real : items).join(", ");
-}
-
 function toPatient(r: PatientRow): PatientInfo {
   return {
     hn: r.hncode || formatHn(r.hn),
@@ -184,8 +163,6 @@ function toPatient(r: PatientRow): PatientInfo {
     diagnosisText: buildDiagnosis(r.dx_code, r.dx_name),
     allergiesText:
       decodeEntities(dedupeList(r.drug_allergy)) || "ไม่พบประวัติแพ้ยา",
-    foodAllergiesText:
-      decodeEntities(foodAllergyList(r.food_allergy_text)) || "ไม่พบประวัติแพ้อาหาร",
     religion:
       cleanReligion(r.religion_desc) ??
       (r.religion_code === "99" ? "ไม่ระบุ" : null),

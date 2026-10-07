@@ -12,7 +12,6 @@ export interface NafFormData {
     hn: string;
     vnAn: string | null;
     admitDate: string | null;
-    allergies: string | null;
   };
   /** record ที่กำลังเปิดอยู่ — ใช้เติมหัวฟอร์มและติ๊กช่องตัวเลือก */
   current: Assessment;
@@ -48,8 +47,6 @@ export function buildNafFormData(
       hn: current.hn,
       vnAn: current.vnAn ?? patient?.vnAn ?? null,
       admitDate: patient?.admitDate ?? null,
-      // แบบประเมินโภชนาการใช้แพ้อาหาร (ไม่ใช่แพ้ยา) — ตรงกับช่อง Food Allergy ในฟอร์ม
-      allergies: current.allergiesSnapshot ?? patient?.foodAllergiesText ?? null,
     },
     current,
     visits: [...byVisit.values()].sort((a, b) => a.visitNo - b.visitNo),

@@ -81,7 +81,6 @@ export default async function AssessmentDetailPage({
           <Item label="BMI" value={String(assessment.bmi)} />
           <Item label="อาการสำคัญ" value={assessment.chiefComplaint ?? "-"} full />
           <Item label="การวินิจฉัยโรค" value={assessment.diagnosisSnapshot ?? "-"} full />
-          <Item label="Food Allergy" value={assessment.allergiesSnapshot ?? "-"} full />
         </dl>
       </Card>
 

@@ -55,7 +55,6 @@ export interface CreateAssessmentInput {
   weightKg: number;
   patientNameSnapshot: string;
   diagnosisSnapshot: string | null;
-  allergiesSnapshot: string | null;
   createdByUserId: number;
   answers: AssessmentAnswerInput[];
 }
@@ -77,7 +76,6 @@ export interface Assessment {
   bmi: number;
   patientNameSnapshot: string;
   diagnosisSnapshot: string | null;
-  allergiesSnapshot: string | null;
   totalScore: number;
   sgaResult: SgaResult;
   createdByUserId: number;

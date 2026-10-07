@@ -361,7 +361,6 @@ export function drawNafForm(
     FIELDS.gender,
     patient.genderLabel === "-" ? null : patient.genderLabel,
   );
-  drawFieldText(ctx, S, FIELDS.allergies, patient.allergies);
 
   // หัวฟอร์ม
   drawFieldText(ctx, S, FIELDS.chiefComplaint, current.chiefComplaint);

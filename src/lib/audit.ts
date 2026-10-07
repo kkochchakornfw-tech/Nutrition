@@ -193,7 +193,6 @@ export function diffSga(before: Assessment, after: Assessment): AuditChange[] {
     ["ส่วนสูง (ซม.)", (r) => r.heightCm],
     ["น้ำหนัก (กก.)", (r) => r.weightKg],
     ["การวินิจฉัยโรค", (r) => r.diagnosisSnapshot],
-    ["Food Allergy", (r) => r.allergiesSnapshot],
     ["คะแนนรวม", (r) => r.totalScore],
     ["ผล SGA", (r) => r.sgaResult],
   ];

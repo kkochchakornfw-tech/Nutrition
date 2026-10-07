@@ -117,7 +117,6 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
   const [heightCm, setHeightCm] = useState(initial ? String(initial.heightCm) : "");
   const [weightKg, setWeightKg] = useState(initial ? String(initial.weightKg) : "");
   const [diagnosisSnapshot, setDiagnosisSnapshot] = useState(initial?.diagnosisSnapshot ?? "");
-  const [allergiesSnapshot, setAllergiesSnapshot] = useState(initial?.allergiesSnapshot ?? "");
 
   const [answers, setAnswers] = useState<Record<number, CriteriaAnswerState>>(
     () => answersToState(initial),
@@ -193,7 +192,6 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
       // โหมดแก้ไข: คงค่าที่บันทึกไว้เดิม ไม่ทับด้วยข้อมูลล่าสุดจาก HIS
       if (!initial) {
         setDiagnosisSnapshot(data.patient.diagnosisText ?? "");
-        setAllergiesSnapshot(data.patient.foodAllergiesText ?? "");
         setReligion(data.patient.religion ?? "");
         setChiefComplaint(data.patient.chiefComplaint ?? "");
         setVnAn(data.patient.vnAn ?? "");
@@ -387,7 +385,6 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
           weightKg: Number(weightKg),
           patientNameSnapshot: patientName,
           diagnosisSnapshot: diagnosisSnapshot || null,
-          allergiesSnapshot: allergiesSnapshot || null,
           answers: flatAnswers,
         }),
       });
@@ -757,16 +754,6 @@ export function AssessmentForm({ initial }: { initial?: Assessment }) {
                       onChange={(e) => setDiagnosisSnapshot(e.target.value)}
                     />
                   </Field>
-                  <div className="sm:col-span-2">
-                    <Field label="Food Allergy" htmlFor="allergies">
-                      <Textarea
-                        id="allergies"
-                        rows={2}
-                        value={allergiesSnapshot}
-                        onChange={(e) => setAllergiesSnapshot(e.target.value)}
-                      />
-                    </Field>
-                  </div>
                 </div>
               </SubGroup>
             </Card>

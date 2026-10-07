@@ -35,7 +35,6 @@ interface AssessmentRow extends RowDataPacket {
   bmi: string | number;
   patient_name_snapshot: string | null;
   diagnosis_snapshot: string | null;
-  allergies_snapshot: string | null;
   total_score: string | number;
   sga_result: SgaResult;
   created_by_user_id: number | null;
@@ -87,7 +86,6 @@ function toAssessment(
     bmi: Number(r.bmi),
     patientNameSnapshot: r.patient_name_snapshot ?? "",
     diagnosisSnapshot: r.diagnosis_snapshot,
-    allergiesSnapshot: r.allergies_snapshot,
     totalScore: Number(r.total_score),
     sgaResult: r.sga_result,
     createdByUserId: r.created_by_user_id ?? 0,
@@ -204,9 +202,9 @@ export async function createAssessment(
     `INSERT INTO assessments
        (hn, vn_an, visit_no, assessed_at, assessor_dietitian_id, assessor_name_snapshot,
         created_by_user_id, chief_complaint, diet_order, religion, info_source, info_source_other,
-        height_cm, weight_kg, bmi, patient_name_snapshot, diagnosis_snapshot, allergies_snapshot,
+        height_cm, weight_kg, bmi, patient_name_snapshot, diagnosis_snapshot,
         total_score, sga_result)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       input.hn,
       input.vnAn,
@@ -225,7 +223,6 @@ export async function createAssessment(
       bmi,
       input.patientNameSnapshot,
       input.diagnosisSnapshot,
-      input.allergiesSnapshot,
       totalScore,
       sgaResult,
     ],
@@ -340,7 +337,7 @@ export async function updateAssessment(
         vn_an = ?, visit_no = ?, assessed_at = ?, assessor_dietitian_id = ?, assessor_name_snapshot = ?,
         chief_complaint = ?, diet_order = ?, religion = ?, info_source = ?, info_source_other = ?,
         height_cm = ?, weight_kg = ?, bmi = ?, patient_name_snapshot = ?, diagnosis_snapshot = ?,
-        allergies_snapshot = ?, total_score = ?, sga_result = ?
+        total_score = ?, sga_result = ?
       WHERE id = ?`,
     [
       input.vnAn,
@@ -358,7 +355,6 @@ export async function updateAssessment(
       bmi,
       input.patientNameSnapshot,
       input.diagnosisSnapshot,
-      input.allergiesSnapshot,
       totalScore,
       sgaResult,
       id,
