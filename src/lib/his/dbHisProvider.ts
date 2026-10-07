@@ -20,19 +20,13 @@ const BASE_SELECT = `
     LEFT JOIN base_religion br
            ON br.base_religion_id::text = TRIM(p.religion::text)
            AND TRIM(p.religion::text) <> '99'
-    -- แผนกโภชนาการใช้ "แพ้อาหาร" จาก nt_allergy (ไม่ใช่แพ้ยา) — เอาจาก nt_patient_nutrition
-    -- ชุดล่าสุดของผู้ป่วยรายนี้ (nt_patient_nutrition.patient_id -> patient.patient_id)
-    LEFT JOIN LATERAL (
-      SELECT npn.nt_patient_nutrition_id
-        FROM nt_patient_nutrition npn
-       WHERE npn.patient_id = p.patient_id
-       ORDER BY npn.nt_patient_nutrition_id DESC
-       LIMIT 1
-    ) latest_npn ON TRUE
+    -- แผนกโภชนาการใช้ "แพ้อาหาร" จาก nt_allergy (ไม่ใช่แพ้ยา) — รวมจากทุกชุดบันทึกโภชนาการของผู้ป่วย
+    -- (ไม่ใช่เฉพาะครั้งล่าสุด: ครั้งล่าสุดอาจว่าง ทั้งที่ครั้งก่อนๆ ระบุว่าแพ้) แล้ว dedupe ฝั่ง TS
     LEFT JOIN LATERAL (
       SELECT STRING_AGG(DISTINCT NULLIF(TRIM(na.note), ''), ', ') AS food_allergy_text
-        FROM nt_allergy na
-       WHERE na.nt_patient_nutrition_id = latest_npn.nt_patient_nutrition_id
+        FROM nt_patient_nutrition npn
+        JOIN nt_allergy na ON na.nt_patient_nutrition_id = npn.nt_patient_nutrition_id
+       WHERE npn.patient_id = p.patient_id
     ) fa ON TRUE
     LEFT JOIN LATERAL (
       SELECT CASE WHEN NULLIF(TRIM(v.an), '') IS NOT NULL
@@ -157,6 +151,17 @@ function dedupeList(src: string | null): string | null {
   return out.length ? out.join(", ") : null;
 }
 
+const NO_ALLERGY = /^(ไม่แพ้|ไม่มี|ปฏิเสธ|none|nos+(knowns+)?(foods+)?allerg)/i;
+
+/** รวมแพ้อาหารทุกครั้ง; ถ้ามีรายการแพ้จริงอยู่ ให้ตัดรายการแนว "ไม่แพ้อาหาร" ของครั้งอื่นทิ้ง */
+function foodAllergyList(src: string | null): string | null {
+  const merged = dedupeList(src);
+  if (!merged) return null;
+  const items = merged.split(", ");
+  const real = items.filter((i) => !NO_ALLERGY.test(i));
+  return (real.length ? real : items).join(", ");
+}
+
 function toPatient(r: PatientRow): PatientInfo {
   return {
     hn: r.hncode || formatHn(r.hn),
@@ -180,7 +185,7 @@ function toPatient(r: PatientRow): PatientInfo {
     allergiesText:
       decodeEntities(dedupeList(r.drug_allergy)) || "ไม่พบประวัติแพ้ยา",
     foodAllergiesText:
-      decodeEntities(r.food_allergy_text) || "ไม่พบประวัติแพ้อาหาร",
+      decodeEntities(foodAllergyList(r.food_allergy_text)) || "ไม่พบประวัติแพ้อาหาร",
     religion:
       cleanReligion(r.religion_desc) ??
       (r.religion_code === "99" ? "ไม่ระบุ" : null),
